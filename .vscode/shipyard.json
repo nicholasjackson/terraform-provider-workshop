@@ -1,0 +1,9 @@
+{
+  "tabs": [
+    {"uri": "http://localhost:3000", "title": "Workshop"}
+  ],
+  "terminals": [
+    {"name": "Terminal 1", "command": "terraform --help", "viewColumn": 1},
+    {"name": "Terminal 2", "command": "ls -la", "viewColumn": 1}
+  ]
+}
