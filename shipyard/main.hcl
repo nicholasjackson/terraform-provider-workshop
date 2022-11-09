@@ -14,8 +14,13 @@ container "vscode" {
   }
 
   volume {
-    source = "../"
-    destination = "/home/src"
+    source = "../provider"
+    destination = "/home/src/provider"
+  }
+  
+  volume {
+    source = "../provider"
+    destination = "/home/src/cdktf/go"
   }
 }
 
