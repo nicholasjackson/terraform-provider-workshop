@@ -16,7 +16,6 @@ To follow the steps in this workshop you will need the following tools installed
 * A Go development environment like VSCode (if not using Docker based environment)
 * Minecraft client
 
-
 ## Using the Docker based Workshop Environment
 
 The Docker based workshop environment provides a browser based Visual Studio Code setup
@@ -150,6 +149,3 @@ next time you run `shipyard run`.
 2022-11-09T17:01:25.574Z [INFO]  Removing data folders: path=/home/nicj/.shipyard/data
 2022-11-09T17:01:25.574Z [INFO]  Removing config: path=/home/nicj/.shipyard/config
 ```
-
-* `shipyard run ./shipyard`
-* Open [http://localhost:8000/?folder=/home/src](http://localhost:8000/?folder=/home/src)
