@@ -4,7 +4,7 @@ container "vscode" {
   }
 
   image {
-    name = "nicholasjackson/codeserver:tfd"
+    name = "nicholasjackson/vscodeserver:tfw"
   }
 
   port {
@@ -29,7 +29,7 @@ docs "docs" {
   path = "./docs"
   
   image {
-    name = "shipyardrun/docs:v0.6.0"
+    name = "shipyardrun/docs:v0.6.1"
   }
 
   index_title = "Docs"
