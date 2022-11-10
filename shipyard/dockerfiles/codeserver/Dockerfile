@@ -5,7 +5,7 @@ FROM ubuntu
 ARG TARGETARCH
 
 # Install default packages
-RUN apt update && apt upgrade -y && apt install -y curl wget zip git jq 
+RUN apt update && apt upgrade -y && apt install -y curl wget zip git jq build-essential
 
 # Install Go
 COPY --from=golang /usr/local/go/ /usr/local/go/

@@ -122,7 +122,7 @@ The conainers used by the environment will be disposed.
 2022-11-09T16:59:04.355Z [INFO]  Destroy Network: ref=local
 ```
 
-## Removing the Workshop environment
+## Removing the Workshop Environment
 
 To clean up and remove any resources downloaded by the environment you can use the following command:
 

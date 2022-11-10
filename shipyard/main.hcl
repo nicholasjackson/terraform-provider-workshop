@@ -12,15 +12,10 @@ container "vscode" {
     host   = 8000
     remote = 8000
   }
-
-  volume {
-    source = "../provider"
-    destination = "/home/src/provider"
-  }
   
   volume {
-    source = "../provider"
-    destination = "/home/src/cdktf/go"
+    source = "../"
+    destination = "/home/src"
   }
 }
 
