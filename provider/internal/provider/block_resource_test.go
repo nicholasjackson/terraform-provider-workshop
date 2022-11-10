@@ -16,7 +16,7 @@ func TestAccExampleResource(t *testing.T) {
 			{
 				Config: testAccExampleResourceConfig("one"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("scaffolding_example.test", "configurable_attribute", "one"),
+					resource.TestCheckResourceAttr("minecraft_block.test", "configurable_attribute", "one"),
 					resource.TestCheckResourceAttr("scaffolding_example.test", "id", "example-id"),
 				),
 			},

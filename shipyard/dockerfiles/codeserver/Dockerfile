@@ -9,7 +9,7 @@ RUN apt update && apt upgrade -y && apt install -y curl wget zip git jq build-es
 
 # Install Go
 COPY --from=golang /usr/local/go/ /usr/local/go/
-ENV PATH="/usr/local/go/bin:${PATH}"
+ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 
 # Install nodejs
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
@@ -24,7 +24,8 @@ RUN npm install --global cdktf-cli@latest
 # Install Terraform
 RUN wget -O terraform.zip https://releases.hashicorp.com/terraform/1.3.4/terraform_1.3.4_linux_${TARGETARCH}.zip && \
   unzip terraform.zip && \
-  mv terraform /usr/local/bin
+  mv terraform /usr/local/bin && \
+  rm terraform.zip
 
 # Install code server
 RUN wget -O- https://aka.ms/install-vscode-server/setup.sh | sh
@@ -45,6 +46,7 @@ RUN go install github.com/ramya-rao-a/go-outline@v0.0.0-20210608161538-9736a4bde
   go install github.com/go-delve/delve/cmd/dlv@latest && \
   go install honnef.co/go/tools/cmd/staticcheck@latest && \
   go install golang.org/x/tools/gopls@latest && \
-  go install github.com/ramya-rao-a/go-outline@v0.0.0-20210608161538-9736a4bde949
+  go install github.com/ramya-rao-a/go-outline@v0.0.0-20210608161538-9736a4bde949 && \
+  go install github.com/goreleaser/goreleaser@latest
 
 ENTRYPOINT ["code-server", "serve-local","--accept-server-license-terms","--without-connection-token","--host","0.0.0.0","--verbose"]
