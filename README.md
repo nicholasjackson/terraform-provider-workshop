@@ -17,11 +17,16 @@ To follow the steps in this workshop you will need the following tools installed
 * Minecraft client
 
 ## Using the Docker based Workshop Environment
-
 The Docker based workshop environment provides a browser based Visual Studio Code setup
 that has Go, Terraform, the other tools required for the workshop installed an pre-configured.
 
-To use the environment, first you will need to install Docker and Shipyard, Docker can be downloaded from
+First clone this repository, you will need all the files locally.
+
+```
+git clone https://github.com/nicholasjackson/terraform-provider-workshop.git
+```
+
+Next, you will need to install Docker and Shipyard, Docker can be downloaded from
 [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/) or 
 installed using a package manager.
 
