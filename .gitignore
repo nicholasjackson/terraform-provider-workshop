@@ -1,3 +1,7 @@
 cdktf.out
 bin
 release
+.terraform
+terraform.tfstate
+terraform.tfstate
+.terraform.lock.hcl
