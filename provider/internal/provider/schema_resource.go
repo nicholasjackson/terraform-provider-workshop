@@ -56,17 +56,27 @@ func (s *schemaPlanModifier) Modify(ctx context.Context, req tfsdk.ModifyAttribu
 	attrPath := path.Empty().AtName("schema")
 	schema := ""
 	req.Plan.GetAttribute(ctx, attrPath, &schema)
+	
+  attrPath = path.Empty().AtName("schema_hash")
+	schemaHash := ""
+	req.Plan.GetAttribute(ctx, attrPath, &schemaHash)
+ 
+  // if empty probably first apply
+  if schemaHash == "" {
+    return
+  }
 
 	// caclculate and compare the hash
 	newHash, _ := calculateHashFromFile(schema)
-
-	// set the new value and set the requires replace, Terraform will force the resource to be re-created
-	resp.AttributePlan = types.StringValue(newHash)
-	resp.RequiresReplace = true
-	resp.Diagnostics.AddWarning(
-		"Schema File Changed",
-		fmt.Sprintf("The file %s has changed from when the resource was originally created, this forces the destruction of the resource.", schema),
-	)
+  if newHash != schemaHash {
+    // set the new value and set the requires replace, Terraform will force the resource to be re-created
+    resp.AttributePlan = types.StringValue(newHash)
+    resp.RequiresReplace = true
+    resp.Diagnostics.AddWarning(
+    	"Schema File Changed",
+      fmt.Sprintf("The file %s has changed from when the resource was originally created, this forces the destruction of the resource. Old file hash: %s, New file hash: %s", schema, schemaHash, newHash),
+    )
+  }
 }
 
 func (r *SchemaResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

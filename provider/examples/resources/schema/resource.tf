@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     minecraft = {
-      source  = "local/nicholasjackson/workshop"
+      source  = "local/nicholasjackson/minecraft"
       version = "0.1.1"
     }
   }
