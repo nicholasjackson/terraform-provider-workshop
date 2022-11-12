@@ -9,7 +9,7 @@ testacc:
 arch=$(shell /bin/bash ./arch.sh)
 name = workshop
 organization = nicholasjackson
-version = 0.1.0
+version = 0.1.1
 log_level = info
 
 build:
@@ -22,18 +22,22 @@ install: build clean
 clean:
 	rm -rf examples/resources/block/.terraform*
 	rm -rf examples/resources/block/terraform.tfstate*
+	rm -rf examples/resources/schema/.terraform*
+	rm -rf examples/resources/schema/terraform.tfstate*
+	rm -rf examples/data-sources/block/.terraform*
+	rm -rf examples/data-sources/block/terraform.tfstate*
 
 init:
-	TF_LOG=$(log_level) terraform -chdir=examples/resources/block init
+	TF_LOG=$(log_level) terraform -chdir=examples/resources/schema init
 
 plan:
-	TF_LOG=$(log_level) terraform -chdir=examples/resources/block plan
+	TF_LOG=$(log_level) terraform -chdir=examples/resources/schema plan
 
 apply:
-	TF_LOG=$(log_level) terraform -chdir=examples/resources/block apply -auto-approve
+	TF_LOG=$(log_level) terraform -chdir=examples/resources/schema apply -auto-approve
 
 destroy:
-	TF_LOG=$(log_level) terraform -chdir=examples/resources/block destroy -auto-approve
+	TF_LOG=$(log_level) terraform -chdir=examples/resources/schema destroy -auto-approve
 
 default: testacc
 

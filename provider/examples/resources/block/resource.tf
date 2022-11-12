@@ -1,20 +1,27 @@
 terraform {
   required_providers {
-    hashicraft = {
-      source  = "nicholasjackson/workshop"
-      version = "0.1.0"
+    minecraft = {
+      source  = "local/nicholasjackson/workshop"
+      version = "0.1.1"
     }
   }
 }
 
-provider "hashicraft" {
+provider "minecraft" {
   endpoint = "http://minecraft.container.shipyard.run:9090"
   api_key = "supertopsecret"
 }
 
-resource "hashicraft_block" "example" {
-  x = 12
-  y = 23
-  z = 43
+resource "minecraft_block" "example" {
+  x = -1273
+  y = 24
+  z = 288
+  material = "minecraft:stone"
+}
+
+resource "minecraft_block" "example2" {
+  x = -1273
+  y = 25
+  z = 288
   material = "minecraft:stone"
 }

@@ -1,4 +1,10 @@
+variable "disable_vscode" {
+  default = false
+}
+
 container "vscode" {
+  disabled = var.disable_vscode
+
   network {
       name = "network.local"
   }

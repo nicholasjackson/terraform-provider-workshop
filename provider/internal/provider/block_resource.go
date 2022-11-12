@@ -129,7 +129,7 @@ func (r *BlockResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Material: data.Material.ValueString(),
 	}
 
-	err := r.minecraftClient.createBlock(br)
+	block, err := r.minecraftClient.createBlock(br)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create example, got error: %s", err))
 		return
@@ -137,7 +137,7 @@ func (r *BlockResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	// For the purposes of this example code, hardcoding a response value to
 	// save into the Terraform state.
-	data.Id = types.StringValue(fmt.Sprintf("%d_%d_%d", x, y, z))
+	data.Id = types.StringValue(block.ID)
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -161,7 +161,7 @@ func (r *BlockResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	y, _ := data.Y.ValueBigFloat().Int64()
 	z, _ := data.Z.ValueBigFloat().Int64()
 
-	err := r.minecraftClient.getBlock(int(x), int(y), int(z))
+	_,err := r.minecraftClient.getBlock(int(x), int(y), int(z))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
 		return
@@ -180,14 +180,6 @@ func (r *BlockResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := d.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update example, got error: %s", err))
-	//     return
-	// }
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

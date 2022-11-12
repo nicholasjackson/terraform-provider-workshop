@@ -31,7 +31,7 @@ type ScaffoldingProviderModel struct {
 }
 
 func (p *MinecraftProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "hashicraft"
+	resp.TypeName = "minecraft"
 	resp.Version = p.version
 }
 
@@ -88,12 +88,13 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 func (p *MinecraftProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewBlockResource,
+		NewSchemaResource,
 	}
 }
 
 func (p *MinecraftProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewExampleDataSource,
+		NewBlockDataSource,
 	}
 }
 
