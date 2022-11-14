@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"net/http"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -13,11 +13,11 @@ import (
 )
 
 // Ensure ScaffoldingProvider satisfies various provider interfaces.
-var _ provider.Provider = &ScaffoldingProvider{}
-var _ provider.ProviderWithMetadata = &ScaffoldingProvider{}
+var _ provider.Provider = &MinecraftProvider{}
+var _ provider.ProviderWithMetadata = &MinecraftProvider{}
 
 // ScaffoldingProvider defines the provider implementation.
-type ScaffoldingProvider struct {
+type MinecraftProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
@@ -25,19 +25,25 @@ type ScaffoldingProvider struct {
 }
 
 // ScaffoldingProviderModel describes the provider data model.
-type ScaffoldingProviderModel struct {
+type MinecraftProviderModel struct {
 	Endpoint types.String `tfsdk:"endpoint"`
+	APIKey   types.String `tfsdk:"api_key"`
 }
 
-func (p *ScaffoldingProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "scaffolding"
+func (p *MinecraftProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "minecraft"
 	resp.Version = p.version
 }
 
-func (p *ScaffoldingProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *MinecraftProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"endpoint": {
+				MarkdownDescription: "Example provider attribute",
+				Optional:            true,
+				Type:                types.StringType,
+			},
+			"api_key": {
 				MarkdownDescription: "Example provider attribute",
 				Optional:            true,
 				Type:                types.StringType,
@@ -46,8 +52,8 @@ func (p *ScaffoldingProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag
 	}, nil
 }
 
-func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var data ScaffoldingProviderModel
+func (p *MinecraftProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	var data MinecraftProviderModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,22 +61,57 @@ func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
+	endpoint := ""
+	apiKey := ""
+
+	// set endpoint and apiKey from config
+	if !data.Endpoint.IsNull() {
+		endpoint = data.Endpoint.ValueString()
+	}
+
+	if !data.APIKey.IsNull() {
+		endpoint = data.APIKey.ValueString()
+	}
+
+	// override from environment variables if set
+	if ep := os.Getenv("MINECRAFT_ENDPOINT"); ep != "" {
+		endpoint = ep
+	}
+
+	if apk := os.Getenv("MINECRAFT_APIKEY"); apk != "" {
+		apiKey = apk
+	}
+
+	// if config is not set, return an error
+	if endpoint == "" {
+		resp.Diagnostics.AddError(
+			"Configuration Error",
+			"Unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_ENDPOINT'",
+		)
+		return
+	}
+
+	if apiKey == "" && data.APIKey.IsNull() {
+		resp.Diagnostics.AddError(
+			"Configuration Error",
+			"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
+		)
+		return
+	}
 
 	// Example client configuration for data sources and resources
-	client := http.DefaultClient
+	client := newClient(endpoint, apiKey)
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
 
-func (p *ScaffoldingProvider) Resources(ctx context.Context) []func() resource.Resource {
+func (p *MinecraftProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewSchemaResource,
 	}
 }
 
-func (p *ScaffoldingProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+func (p *MinecraftProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewExampleDataSource,
 	}
@@ -78,7 +119,7 @@ func (p *ScaffoldingProvider) DataSources(ctx context.Context) []func() datasour
 
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
-		return &ScaffoldingProvider{
+		return &MinecraftProvider{
 			version: version,
 		}
 	}

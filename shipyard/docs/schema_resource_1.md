@@ -1,4 +1,5 @@
 ---
+sidebar_position: 3
 id: schema_1
 title: Schema Resource - Create Method
 ---
@@ -141,7 +142,7 @@ resource "minecraft_schema" "bus" {
   y = 24
   z = 288
   rotation = 270
-  schema = "../../../example_schemas/car.zip"
+  schema = "../../../schemas/car.zip"
 }
 ```
 

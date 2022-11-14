@@ -7,7 +7,7 @@ testacc:
 	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
 arch=$(shell /bin/bash ./arch.sh)
-name = example
+name = minecraft
 organization = hashicraft
 version = 0.1.0
 log_level = info
