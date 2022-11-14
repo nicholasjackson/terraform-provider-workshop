@@ -37,6 +37,7 @@ type BlockDataSourceModel struct {
 	X                     types.Number `tfsdk:"x"`
 	Y                     types.Number `tfsdk:"y"`
 	Z                     types.Number `tfsdk:"z"`
+    Material              types.String `tfsdk:"material"`
 	Id                    types.String `tfsdk:"id"`
 }
 ```
@@ -73,6 +74,11 @@ func (d *BlockDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
 				Type:                types.NumberType,
+			},
+            "material": {
+				MarkdownDescription: "Example identifier",
+				Type:                types.StringType,
+				Computed:            true,
 			},
 			"id": {
 				MarkdownDescription: "Example identifier",

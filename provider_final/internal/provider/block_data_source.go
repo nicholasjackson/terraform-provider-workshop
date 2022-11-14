@@ -25,26 +25,42 @@ type BlockDataSource struct {
 
 // ExampleDataSourceModel describes the data source data model.
 type BlockDataSourceModel struct {
-	X  types.Number `tfsdk:"x"`
-	Y  types.Number `tfsdk:"y"`
-	Z  types.Number `tfsdk:"z"`
-	Id types.String `tfsdk:"id"`
+	X        types.Number `tfsdk:"x"`
+	Y        types.Number `tfsdk:"y"`
+	Z        types.Number `tfsdk:"z"`
+	Material types.String `tfsdk:"material"`
+	Id       types.String `tfsdk:"id"`
 }
 
 func (d *BlockDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_example"
+	resp.TypeName = req.ProviderTypeName + "_block"
 }
 
 func (d *BlockDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Example data source",
+		MarkdownDescription: "Block data source",
 
 		Attributes: map[string]tfsdk.Attribute{
-			"configurable_attribute": {
+			"x": {
 				MarkdownDescription: "Example configurable attribute",
-				Optional:            true,
+				Required:            true,
+				Type:                types.NumberType,
+			},
+			"y": {
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				Type:                types.NumberType,
+			},
+			"z": {
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				Type:                types.NumberType,
+			},
+			"material": {
+				MarkdownDescription: "Example identifier",
 				Type:                types.StringType,
+				Computed:            true,
 			},
 			"id": {
 				MarkdownDescription: "Example identifier",
@@ -85,22 +101,26 @@ func (d *BlockDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := d.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
-	//     return
-	// }
+	x, _ := data.X.ValueBigFloat().Int64()
+	y, _ := data.Y.ValueBigFloat().Int64()
+	z, _ := data.Z.ValueBigFloat().Int64()
 
-	// For the purposes of this example code, hardcoding a response value to
-	// save into the Terraform state.
-	data.Id = types.StringValue("example-id")
+	block, err := d.minecraftClient.getBlock(int(x), int(y), int(z))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to retrieve block",
+			fmt.Sprintf("Unable to get block, got error: %s", err),
+		)
+
+		return
+	}
+
+	data.Material = types.StringValue(block.Material)
+	data.Id = types.StringValue(block.ID)
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "read a data source")
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

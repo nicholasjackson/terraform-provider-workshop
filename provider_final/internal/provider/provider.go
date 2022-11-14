@@ -108,6 +108,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 func (p *MinecraftProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewSchemaResource,
+		NewBlockResource,
 	}
 }
 
