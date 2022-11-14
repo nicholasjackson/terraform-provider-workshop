@@ -179,7 +179,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	}
 
 	if !data.APIKey.IsNull() {
-		endpoint = data.APIKey.ValueString()
+		apiKey = data.APIKey.ValueString()
 	}
 
 	// override from environment variables if set
@@ -311,7 +311,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	}
 
 	if !data.APIKey.IsNull() {
-		endpoint = data.APIKey.ValueString()
+		apiKey = data.APIKey.ValueString()
 	}
 
 	// override from environment variables if set

@@ -167,4 +167,104 @@ Let's now create the resources.
 
 ## Running Apply
 
+Open your Minecraft client and go to the location -1278,24,288, it should approximately be in the center of the crossroads.
+
+![](./images/manual_testing/before.png)
+
 Let's now run `terraform apply` to create the resources.
+
+```shell
+terraform apply
+```
+
+```shell
+Terraform used the selected providers to generate the following execution plan. Resource actions are
+indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # minecraft_schema.bus will be created
+  + resource "minecraft_schema" "bus" {
+      + id          = (known after apply)
+      + rotation    = 270
+      + schema      = "../../../schemas/car.zip"
+      + schema_hash = (known after apply)
+      + x           = -1278
+      + y           = 24
+      + z           = 288
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+minecraft_schema.bus: Creating...
+minecraft_schema.bus: Creation complete after 3s [id=1668442780035]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+```
+
+You should see a car created at the coordinates specified by the resource
+schema.
+
+![](./images/manual_testing/after.png)
+
+Now let's clean up.
+
+## Destroy
+
+Running `terraform destroy` will invoke the `Delete` method for your schema
+resource. Let`s test that, run the following command in your terminal.
+
+```shell
+terraform destroy
+```
+
+You will see output in your terminal that looks like the following.
+
+```shell
+minecraft_schema.bus: Refreshing state... [id=1668442780035]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are
+indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # minecraft_schema.bus will be destroyed
+  - resource "minecraft_schema" "bus" {
+      - id          = "1668442780035" -> null
+      - rotation    = 270 -> null
+      - schema      = "../../../schemas/car.zip" -> null
+      - schema_hash = "GlcbIxS+tBGsVVkdctmHkozo40ER0oJfkzkvOxBLvGA=" -> null
+      - x           = -1278 -> null
+      - y           = 24 -> null
+      - z           = 288 -> null
+    }
+
+Plan: 0 to add, 0 to change, 1 to destroy.
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+minecraft_schema.bus: Destroying... [id=1668442780035]
+minecraft_schema.bus: Destruction complete after 1s
+
+Destroy complete! Resources: 1 destroyed.
+```
+
+And when you look at your Minecraft client the Car is gone and everything is
+restored to the previous state.
+
+Why not try creating some other resources.
+
+Now your provider is all working for the schema resource, let's see how you
+can create a data source.

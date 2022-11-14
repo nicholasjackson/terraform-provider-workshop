@@ -70,7 +70,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	}
 
 	if !data.APIKey.IsNull() {
-		endpoint = data.APIKey.ValueString()
+		apiKey = data.APIKey.ValueString()
 	}
 
 	// override from environment variables if set
@@ -113,7 +113,7 @@ func (p *MinecraftProvider) Resources(ctx context.Context) []func() resource.Res
 
 func (p *MinecraftProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewExampleDataSource,
+		NewBlockDataSource,
 	}
 }
 

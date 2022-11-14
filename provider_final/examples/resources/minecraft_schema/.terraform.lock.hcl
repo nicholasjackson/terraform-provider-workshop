@@ -5,6 +5,6 @@ provider "local/hashicraft/minecraft" {
   version     = "0.1.0"
   constraints = "0.1.0"
   hashes = [
-    "h1:EEQotZNzKDiCSWN84OPV8PDP4b4ypHXU8qmDPiSXUtw=",
+    "h1:1txxrvlX5cY6CJFmBiFg+Rlopgg3bQIvbNfD9hByVAA=",
   ]
 }
