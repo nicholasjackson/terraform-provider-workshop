@@ -1,1 +1,6 @@
 cdktf.out
+bin
+releases
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
