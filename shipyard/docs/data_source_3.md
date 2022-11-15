@@ -1,7 +1,7 @@
 ---
 sidebar_position: 11
 id: data_source_3
-title: Creating the Config Example
+title: Data Source - Creating the Config Example
 ---
 
 Like in the reosource example, you need to define a `required_providers` 

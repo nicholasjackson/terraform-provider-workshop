@@ -4,17 +4,17 @@ id: overview
 title: Provider Overview
 ---
 
-If you are using the browser based editor, open the folder
-`/home/src/provider`. If you are using your own editor you need
-to open the folder `./provider, for the rest of this guide we will refer
-to all filepaths as if you are using the browser based editor.
+If you use the browser-based editor, open the folder `/home/src/provider`. 
+If you are using your editor, you need to open the folder `./provider; for 
+the rest of this guide, we will refer to all file paths as if you are using the 
+browser-based editor.
 
-The `provider` folder has been cloned from the HashiCorp scaffolding example that can
-be found at:
+The `provider` folder has been cloned from the HashiCorp scaffolding example
+in the following repository.
 
 [https://github.com/hashicorp/terraform-provider-scaffolding-framework](https://github.com/hashicorp/terraform-provider-scaffolding-framework)
 
-There are a number of sub folders in this this folder, these are:
+There are several sub folders in this folder, these are:
 
 | Folder       | Description                                              |
 |--------------|----------------------------------------------------------|
@@ -30,10 +30,10 @@ There are also some important files
 | GUNmakefile  | Makefile for the provider containing commands for building |
 | terraform-registry-manifest.json | Manifest file needed by the Terraform registry |
 
-## Testing the Build
-
 Before continuing, let's validate that your environment is working correctly
 and that you can build the example.
+
+## Testing the Build
 
 Open your terminal at the location where the provider source is and run the
 following command to build the provider.
@@ -58,40 +58,44 @@ total 18792
 
 ## Plugin Install Location
 
-This file can not be run directly, instead it is designed to be loaded by Terraform.
-Terraform requires that the file has a specific format:
+The compiled provider cannot be run directly; instead, it is intended to be 
+loaded by Terraform. Terraform requires that the file has a specific naming
+convention.
 
-```shell
-terraform-provider-[name]_v[semver]
-```
-
-This file then needs to be installed into `$HOME/.terraform.d/plugins` again with
-a specific naming convention.
+For Terraform to load a provider, it needs to be installed into `$HOME/.terraform.d/plugins` 
+again with a specific naming for the directory.
 
 ```shell
 ~/.terraform.d/plugins/local/[organization]/[name]/[version)/[architecture]/
 ```
 
 #### Organization
-The organiztion is your organization name, this generally aligns to the org
+
+The organization is your organization name; this generally aligns with the org
 of your GitHub account.
 
 #### Name
-This is the name of the provider, when creating a repository for a provider
+
+This is the provider's name; when creating a repository for a provider, 
 you need to ensure that the following convention is used for the registry
-to import it `terraform-provider-[name]`. This follows the same convention
+to import it `terraform-provider-[name]`. Again following the same pattern 
 that the binary name uses.
 
 #### Version
+
 The semantic version of your provider without any `v`.
 
 #### Architecture
-This is actually the operating system and the architecture that the provider
-has been built for. It corresponds to the GOOS and GOARCH settings.
 
-[https://go.dev/doc/install/source#environment](https://go.dev/doc/install/source#environment)
+The architecture is actually the operating system and the architecture that the provider
+has been built for. It corresponds to the GOOS and GOARCH settings. For example,
+`darwin_amd64`, or `linux_arm64`.
 
-The makefile `GNUmakefile` contains some example configurations for building
-your provider for the most common operating systems and architectures.
+[https://go.dev/doc/install/source#environment]To simplify things, the makefile 
+`GNUmakefile` contains some example configurations for building
+your provider for the most common operating systems and architectures. It also 
+has targets that will streamline the building and installation of the provider 
+for local testing. Before we begin, why not familiarize yourself with this file? 
+You will use it extensively throughout this workshop.
 
 Let's now start to build our provider.

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 10
 id: data_source_2
-title: Implementing the Read Method
+title: Data Source - Implementing the Read Method
 ---
 
 Where resources have a full CRUD implementation with `Create`, `Read`, `Update`

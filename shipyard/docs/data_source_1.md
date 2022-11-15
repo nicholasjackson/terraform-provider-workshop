@@ -1,7 +1,7 @@
 ---
 sidebar_position: 9
 id: data_source_1
-title: Creating a Data Source
+title: Data Source - Creating a Data Source
 ---
 
 A data source allows you to provide a read only view for resources in your

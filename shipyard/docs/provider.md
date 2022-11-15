@@ -1,7 +1,7 @@
 ---
 sidebar_position: 7
 id: provider
-title: Provider
+title: Provider - Configuring the Provider
 ---
 
 The `provider.go`  type is the main entry point for your plugin, when
