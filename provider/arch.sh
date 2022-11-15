@@ -3,8 +3,8 @@
 local_arch="amd64"
 local_os="linux"
 
-if [[ "$(uname -m)" == "arm64" ]]; then
-  local_arch="arm64"
+if [[ "$(uname -m)" == "x86_64" ]]; then
+  local_arch="amd64"
 fi
 
 if [[ "$(uname)" == "Darwin" ]]; then
