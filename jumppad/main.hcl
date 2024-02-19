@@ -13,7 +13,6 @@ variable "vscode_token" {
 resource "copy" "source_files" {
   source      = "../provider"
   destination = data("provider_source")
-  permissions = "0666"
 }
 
 resource "template" "vscode_jumppad" {

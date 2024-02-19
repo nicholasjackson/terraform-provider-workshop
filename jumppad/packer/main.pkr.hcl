@@ -3,22 +3,22 @@ variable "jumppad_version" {
 }
 
 variable "jumppad_images" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
 variable "project_id" {
-	type = string
+  type = string
 }
 
 variable "region" {
-	type = string
-	default = "europe-west1"
+  type    = string
+  default = "europe-west1"
 }
 
 variable "zone" {
-	type = string
-	default = "europe-west1-b"
+  type    = string
+  default = "europe-west1-c"
 }
 
 packer {
@@ -36,7 +36,7 @@ source "googlecompute" "jumppad" {
   zone       = var.zone
 
   image_family = "jumppad"
-  image_name   = regex_replace("jumppad-${var.jumppad_version}", "[^a-zA-Z0-9_-]", "-")
+  image_name   = regex_replace("terraform-provider-${var.jumppad_version}", "[^a-zA-Z0-9_-]", "-")
 
   source_image_family = "ubuntu-2204-lts"
   machine_type        = "n1-standard-4"
