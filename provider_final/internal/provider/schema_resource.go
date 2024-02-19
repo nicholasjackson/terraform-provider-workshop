@@ -40,6 +40,16 @@ type SchemaResourceModel struct {
 	Id         types.String `tfsdk:"id"`
 }
 
+type SchemaResourceModel2 struct {
+	X          int    `tfsdk:"x"`
+	Y          int    `tfsdk:"y"`
+	Z          int    `tfsdk:"z"`
+	Rotation   int    `tfsdk:"rotation"`
+	Schema     string `tfsdk:"schema"`
+	SchemaHash string `tfsdk:"schema_hash"`
+	Id         string `tfsdk:"id"`
+}
+
 func (r *SchemaResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_schema"
 }

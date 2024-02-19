@@ -1,0 +1,19 @@
+jumppad_images=[
+  "shipyardrun/k3s:v1.27.4",
+  "shipyardrun/docker-registry-proxy:0.6.3",
+  "hashicorp/terraform:1.6.4",
+  "nginx:1.25.3",
+  "derailed/k9s",
+  "grafana/grafana:10.3.1",
+  "rancher/local-path-provisioner:v0.0.24",
+  "rancher/mirrored-coredns-coredns:1.10.1",
+  "rancher/mirrored-library-busybox:1.34.1",
+  "rancher/mirrored-metrics-server:v0.6.3",
+  "rancher/mirrored-pause:3.6",
+  "ghcr.io/jumppad-labs/connector:v0.2.1",
+  "quay.io/prometheus-operator/prometheus-config-reloader:v0.71.2",
+  "quay.io/prometheus/alertmanager:v0.26.0",
+  "quay.io/prometheus/node-exporter:v1.7.0",
+  "quay.io/prometheus/prometheus:v2.49.1",
+  "quay.io/prometheus/pushgateway:v1.7.0"
+]
