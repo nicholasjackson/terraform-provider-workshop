@@ -2,13 +2,24 @@ resource "network" "main" {
   subnet = "10.0.0.0/16"
 }
 
-variable "base_url" {
-  default = "localhost"
+variable "docs_url" {
+  description = "The URL for the documentation site"
+  default     = "http://localhost"
 }
 
-variable "url_scheme" {
-  description = "The base URL scheme for the site"
-  default     = "http://"
+variable "prismarine_url" {
+  description = "The URL for prismarine"
+  default     = "http://localhost:8080"
+}
+
+variable "minecraft_url" {
+  description = "The URL for the Minecraft server"
+  default     = "minecraft.container.jumppad.dev"
+}
+
+variable "api_url" {
+  description = "The URL for the Minecraft API"
+  default     = "http://localhost:9090"
 }
 
 variable "vscode_token" {
@@ -26,7 +37,7 @@ resource "template" "vscode_jumppad" {
   "tabs": [
     {
       "name": "Docs",
-      "uri": "${variable.url_scheme}${variable.base_url}",
+      "uri": "${variable.docs_url}",
       "type": "browser",
       "active": true
     },
@@ -110,8 +121,10 @@ module "workshop" {
 
   variables = {
     working_directory = "/provider"
-    base_url          = variable.base_url
-    url_scheme        = variable.url_scheme
+    docs_url          = variable.docs_url
+    minecraft_url     = variable.minecraft_url
+    prismarine_url    = variable.prismarine_url
+    redoc_url         = variable.redoc_url
   }
 }
 

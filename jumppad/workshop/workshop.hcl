@@ -1,11 +1,21 @@
-variable "base_url" {
-  description = "The base URL for the site"
+variable "docs_url" {
+  description = "The URL for the documentation site"
+  default     = "http://localhost"
+}
+
+variable "prismarine_url" {
+  description = "The URL for prismarine"
+  default     = "http://localhost:8080"
+}
+
+variable "minecraft_url" {
+  description = "The URL for the Minecraft server"
   default     = "localhost"
 }
 
-variable "url_scheme" {
-  description = "The base URL scheme for the site"
-  default     = "https://"
+variable "api_url" {
+  description = "The URL for the Minecraft API"
+  default     = "http://localhost:9090"
 }
 
 resource "chapter" "introduction" {
@@ -13,8 +23,10 @@ resource "chapter" "introduction" {
 
   page "introduction" {
     content = template_file("docs/introduction/intro.mdx", {
-      base_url   = variable.base_url
-      url_scheme = variable.url_scheme
+      docs_url       = variable.docs_url
+      prismarine_url = variable.prismarine_url
+      minecraft_url  = variable.minecraft_url
+      api_url        = variable.api_url
     })
   }
 }
@@ -28,21 +40,27 @@ resource "chapter" "resources" {
 
   page "schema_create" {
     content = template_file("docs/resources/schema_resource_1.mdx", {
-      base_url   = variable.base_url
-      url_scheme = variable.url_scheme
+      docs_url       = variable.docs_url
+      prismarine_url = variable.prismarine_url
+      minecraft_url  = variable.minecraft_url
+      api_url        = variable.api_url
     })
   }
 
-  page "schema_read" {
+  page "schema_custom" {
     content = file("docs/resources/schema_resource_2.mdx")
   }
 
-  page "schema_update" {
+  page "schema_read" {
     content = file("docs/resources/schema_resource_3.mdx")
   }
 
-  page "schema_delete" {
+  page "schema_update" {
     content = file("docs/resources/schema_resource_4.mdx")
+  }
+
+  page "schema_delete" {
+    content = file("docs/resources/schema_resource_5.mdx")
   }
 
   page "provider_configure" {
