@@ -1,8 +1,21 @@
+variable "base_url" {
+  description = "The base URL for the site"
+  default     = "localhost"
+}
+
+variable "url_scheme" {
+  description = "The base URL scheme for the site"
+  default     = "https://"
+}
+
 resource "chapter" "introduction" {
   title = "Introduction"
 
   page "introduction" {
-    content = file("docs/introduction/intro.mdx")
+    content = template_file("docs/introduction/intro.mdx", {
+      base_url   = variable.base_url
+      url_scheme = variable.url_scheme
+    })
   }
 }
 
@@ -14,7 +27,10 @@ resource "chapter" "resources" {
   }
 
   page "schema_create" {
-    content = file("docs/resources/schema_resource_1.mdx")
+    content = template_file("docs/resources/schema_resource_1.mdx", {
+      base_url   = variable.base_url
+      url_scheme = variable.url_scheme
+    })
   }
 
   page "schema_read" {

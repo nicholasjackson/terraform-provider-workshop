@@ -18,7 +18,7 @@ variable "region" {
 
 variable "zone" {
   type    = string
-  default = "europe-west1-c"
+  default = "europe-west1-d"
 }
 
 packer {

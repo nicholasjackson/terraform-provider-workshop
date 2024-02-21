@@ -12,7 +12,7 @@ this workshop. Before continuing, let's explore this.
 
 The API for the Minecraft server is running at:
 
-[http://minecraft.container.shipyard.run:9090](http://minecraft.container.shipyard.run:9090)
+[{{url_scheme}}{{ base_url }}:9090]({{url_scheme}}{{ base_url }}:9090)
 
 You will use this when interacting with your Terraform provider through the
 provided go client SDK.
@@ -20,7 +20,7 @@ provided go client SDK.
 Documentation for this API can be seen by viewing the `ReDoc` documentation at
 the following location:
 
-[http://minecraft.container.shipyard.run:9090/redoc](http://minecraft.container.shipyard.run:9090/redoc)
+[{{url_scheme}}{{ base_url }}:9090/redoc]({{url_scheme}}{{ base_url }}:9090/redoc)
 
 
 ### Minecraft
@@ -35,39 +35,43 @@ To connect using your own Minecraft client, you can use the following settings
 when adding a new server in the multiplayer options. 
 
 ```
-Server: minecraft.container.shipyard.run
+Server: {{ base_url }}
 Port: 25565
 ```
 
-![](./images//getting_started/minecraft_client_1.jpg)
+![](/assets/getting_started/minecraft_client_1.jpg)
 
 The city you will be terraforming should look familiar to you.
 
-![](./images//getting_started/minecraft_client_2.jpg)
+![](/assets/getting_started/minecraft_client_2.jpg)
 
-:::note
+**Note**
 Only the Java version of Minecraft will work.
-:::
 
 #### Connecting to the Server - Minecraft Browser
 
 You can use the browser-based client if you do not have a Minecraft client. 
 To access this, open the following URL in your browser:
 
-[http://minecraft.container.shipyard.run:8080]Click play, and when requested, 
-you can use the following details to connect:
+[{{url_scheme}}{{ base_url }}:8080]({{url_scheme}}{{ base_url }}:8080}})
+
+Click play, and when requested.
+
+
+If you do have a minecraft client you can use the following details to connect:
 
 ```
-Server: minecraft.container.shipyard.run
+Server: {{ base_url }}
 Port: 25565
 ```
 
-![](./images//getting_started/minecraft_web_2.jpg)
+![](/assets/getting_started/minecraft_web_2.jpg)
 
 While this does not look as nice as the official Minecraft client, 
-it is a) free and b) Minecraft in the browser.
+it is:  
+a) free  
+b) Minecraft in the browser
 
 Looks aside, the browser-based client will provide all the functionality 
-you need for this workshop.
-
-That is all you need to know about the setup; let's start building our provider.
+you need for this workshop. That is all you need to know about the setup; 
+let's start building our provider.

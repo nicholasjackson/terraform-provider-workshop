@@ -29,7 +29,7 @@ add-apt-repository \
 apt-get update && apt-get install -y docker-ce
 
 # Install Jumppad
-curl -s -L https://github.com/jumppad-labs/jumppad/releases/download/v${JUMPPAD_VERSION}/jumppad_${JUMPPAD_VERSION}_linux_x86_64.tar.gz | tar -xz
+curl -s -L https://github.com/jumppad-labs/jumppad/releases/download/${JUMPPAD_VERSION}/jumppad_${JUMPPAD_VERSION}_linux_x86_64.tar.gz | tar -xz
 mv jumppad /usr/local/bin/jumppad
 chmod +x /usr/local/bin/jumppad
 

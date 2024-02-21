@@ -3,13 +3,15 @@
 HOSTNAME=$(hostname)
 
 # Generate CA certificates for the Jumppad connector
-/usr/local/bin/jumppad generate-certs \
+/usr/local/bin/jumppad connector generate-certs \
+  --non-interactive \
   --ca \
   --dns-name \
   /root/.jumppad/certs/
 
 # Generate leaf certificates for the Jumppad connector
-/usr/local/bin/jumppad generate-certs \
+/usr/local/bin/jumppad connector generate-certs \
+  --non-interactive \
   --root-ca /root/.jumppad/certs/root.cert \
   --root-key /root/.jumppad/certs/root.key \
   --leaf \
@@ -19,6 +21,7 @@ HOSTNAME=$(hostname)
 
 # Start the Jumppad connector
 jumppad connector run \
+  --non-interactive \
   --grpc-bind=:30001 \
   --http-bind=:30002 \
   --api-bind=:30003 \

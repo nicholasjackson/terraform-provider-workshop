@@ -2,8 +2,13 @@ resource "network" "main" {
   subnet = "10.0.0.0/16"
 }
 
-variable "docs_url" {
-  default = "http://localhost"
+variable "base_url" {
+  default = "localhost"
+}
+
+variable "url_scheme" {
+  description = "The base URL scheme for the site"
+  default     = "http://"
 }
 
 variable "vscode_token" {
@@ -21,7 +26,7 @@ resource "template" "vscode_jumppad" {
   "tabs": [
     {
       "name": "Docs",
-      "uri": "${variable.docs_url}",
+      "uri": "${variable.url_scheme}${variable.base_url}",
       "type": "browser",
       "active": true
     },
@@ -52,17 +57,12 @@ resource "template" "vscode_settings" {
 
 resource "container" "vscode" {
   network {
-    id = resource.network.main.resource_id
+    id = resource.network.main.meta.id
   }
 
   image {
     name = "nicholasjackson/terraform-provider-workshop:v0.2.0"
   }
-
-  //volume {
-  //  source      = "${dir()}/scripts"
-  //  destination = "/var/lib/jumppad/"
-  //}
 
   volume {
     source      = resource.copy.source_files.destination
@@ -77,11 +77,6 @@ resource "container" "vscode" {
   volume {
     source      = resource.template.vscode_settings.destination
     destination = "/provider/.vscode/settings.json"
-  }
-
-  volume {
-    source      = "/var/run/docker.sock"
-    destination = "/var/run/docker.sock"
   }
 
   environment = {
@@ -115,12 +110,14 @@ module "workshop" {
 
   variables = {
     working_directory = "/provider"
+    base_url          = variable.base_url
+    url_scheme        = variable.url_scheme
   }
 }
 
 resource "docs" "docs" {
   network {
-    id = resource.network.main.resource_id
+    id = resource.network.main.meta.id
   }
 
   /* 
