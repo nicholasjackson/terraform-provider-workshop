@@ -62,13 +62,17 @@ resource "chapter" "resources" {
   page "schema_delete" {
     content = file("docs/resources/schema_resource_5.mdx")
   }
+}
+
+resource "chapter" "provider" {
+  title = "Provider"
 
   page "provider_configure" {
-    content = file("docs/resources/provider_configure.mdx")
+    content = file("docs/provider/provider_configure.mdx")
   }
 
   page "manual_testing" {
-    content = file("docs/resources/manual_testing.mdx")
+    content = file("docs/provider/manual_testing.mdx")
   }
 }
 
@@ -98,6 +102,7 @@ resource "book" "terraform_provider" {
   chapters = [
     resource.chapter.introduction,
     resource.chapter.resources,
+    resource.chapter.provider,
     resource.chapter.data_sources,
   ]
 }

@@ -366,7 +366,7 @@ If you look at the `Create` method, you will see the following code at the
 top.
 
 ```go
-var data *SchemaResourceModel
+var data SchemaResourceModel
 
 // Read Terraform plan data into the model
 resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)

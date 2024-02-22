@@ -4,60 +4,34 @@ Before testing the provider you need to build it and install it to your local
 folder. Run the following commands in your terminal.
 
 ```shell
-make build
 make install
 ```
 
 ```shell
-go build -o bin/terraform-provider-example_v0.1.0
+Building provider binary
+go build -o bin/terraform-provider-minecraft_v0.1.0 -buildvcs=false
+
+Clean example terraform state
 rm -rf examples/resources/block/.terraform*
 rm -rf examples/resources/block/terraform.tfstate*
-mkdir -p ~/.terraform.d/plugins/local/hashicraft/example/0.1.0/darwin_amd64
-mv bin/terraform-provider-example_v0.1.0 ~/.terraform.d/plugins/local/hashicraft/example/0.1.0/darwin_amd64/
+rm -rf examples/resources/schema/.terraform*
+rm -rf examples/resources/schema/terraform.tfstate*
+rm -rf examples/data-sources/block/.terraform*
+rm -rf examples/data-sources/block/terraform.tfstate*
+
+Install provider binary
+mkdir -p ~/.terraform.d/plugins/local/hashicraft/minecraft/0.1.0/linux_amd64
+mv bin/terraform-provider-minecraft_v0.1.0 ~/.terraform.d/plugins/local/hashicraft/minecraft/0.1.0/linux_amd64/
 ```
 
 ## Creating the Example
 
-In the `examples` folder there is a folder called `scaffolding_example` 
-change the name of this folder to `minecraft_schema`. Then in the `resource.tf`
-file delete any existing contents.
+In the `examples` folder there is a folder called `scaffolding_example` in 
+which you have already defined an example of how to use the provider. You can
+change the name of this folder to `minecraft_schema`. This does not make any
+difference to the functionality but is a good convention to follow.
 
-You first need to define a required providers stanza that tells Terraform
-where to find your provider.
-
-```javascript
-terraform {
-  required_providers {
-    minecraft = {
-      source  = "local/hashicraft/minecraft"
-      version = "0.1.0"
-    }
-  }
-}
-```
-
-Next you can configure the provider, the address `minecraft.container.shipyard.run` will resolve to the local Minecraft server that the environment is running.
-
-```javascript
-provider "minecraft" {
-  endpoint = "http://minecraft.container.shipyard.run:9090"
-  api_key = "supertopsecret"
-}
-```
-
-Finally let's specify the resource
-
-```javascript
-resource "minecraft_schema" "bus" {
-  x = -1278
-  y = 24
-  z = 288
-  rotation = 270
-  schema = "../../../schemas/car.zip"
-}
-```
-
-Your final file should look like the following.
+You final file should look like the following:
 
 ```javascript
 terraform {
@@ -70,11 +44,11 @@ terraform {
 }
 
 provider "minecraft" {
-  endpoint = "http://minecraft.container.shipyard.run:9090"
+  endpoint = "http://minecraft.container.jumppad.dev:9090"
   api_key = "supertopsecret"
 }
 
-resource "minecraft_schema" "bus" {
+resource "minecraft_schema" "car" {
   x = -1278
   y = 24
   z = 288
@@ -89,7 +63,7 @@ To use a provider with Terraform you first need to run `terraform init`,
 Terraform will locate any required providers and copy them to the local
 folder.
 
-In your terminal change directory to the `examples/minecraft_schema` folder
+In your terminal change directory to the `examples/resources/minecraft_schema` folder
 and run the following command.
 
 ```shell
@@ -134,38 +108,37 @@ terraform plan
 You should see output like the following:
 
 ```shell
-Terraform used the selected providers to generate the following execution plan. Resource
-actions are indicated with the following symbols:
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following
+symbols:
   + create
 
 Terraform will perform the following actions:
 
-  # minecraft_schema.bus will be created
-  + resource "minecraft_schema" "bus" {
-      + id          = (known after apply)
-      + rotation    = 270
-      + schema      = "../../../schemas/car.zip"
-      + schema_hash = (known after apply)
-      + x           = -1278
-      + y           = 24
-      + z           = 288
+  # minecraft_schema.car will be created
+  + resource "minecraft_schema" "car" {
+      + id       = (known after apply)
+      + rotation = 270
+      + schema   = "../../../schemas/car.zip"
+      + x        = -1278
+      + y        = 24
+      + z        = 288
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 
-───────────────────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to
-take exactly these actions if you run "terraform apply" now.
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform
+apply" now.
 ```
 
 Let's now create the resources.
 
 ## Running Apply
 
-Open your Minecraft client and go to the location -1278,24,288, it should approximately be in the center of the crossroads.
+Open your Minecraft client and go to the location `-1278,24,288`, it should approximately be in the center of the crossroads.
 
-![](./images/manual_testing/before.png)
+![](/assets/manual_testing/before.png)
 
 Let's now run `terraform apply` to create the resources.
 

@@ -1,7 +1,9 @@
 # Schema - Delete
 
+<Intro>
 The `Delete` method is called by Terraform when you run a `destroy` operation.
 `Delete` is where you will clean up any resources created with `Create`. 
+</Intro>
 
 This should be quite a simple method to implement, so let's begin then we can
 test our new provider.
@@ -26,9 +28,12 @@ That completes all that is needed for the `SchemaResource`, your final file
 should look like the following.
 
 <details>
-  <summary>schema_resource.go</summary>
+  <summary>**Completed example:** schema_resource.go</summary>
 
 ```go
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -39,15 +44,17 @@ import (
 	"io"
 	"os"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Ensure provider defined types fully satisfy framework interfaces
+// Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SchemaResource{}
 var _ resource.ResourceWithImportState = &SchemaResource{}
 
@@ -55,12 +62,12 @@ func NewSchemaResource() resource.Resource {
 	return &SchemaResource{}
 }
 
-// ExampleResource defines the resource implementation.
+// SchemaResource defines the resource implementation.
 type SchemaResource struct {
 	minecraftClient *client
 }
 
-// ExampleResourceModel describes the resource data model.
+// SchemaResourceModel describes the resource data model.
 type SchemaResourceModel struct {
 	X          types.Number `tfsdk:"x"`
 	Y          types.Number `tfsdk:"y"`
@@ -72,75 +79,59 @@ type SchemaResourceModel struct {
 }
 
 func (r *SchemaResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_example"
+	resp.TypeName = req.ProviderTypeName + "_schema"
 }
 
-func (r *SchemaResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Schema resource",
+		MarkdownDescription: "Example resource",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"x": {
+		Attributes: map[string]schema.Attribute{
+			"x": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"y": {
+			"y": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"z": {
+			"z": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"rotation": {
-				MarkdownDescription: "Example configurable attribute",
-				Required:            false,
-				Optional:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
-				},
-			},
-			"schema": {
+			"rotation": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"schema_hash": {
-				Computed:            true,
+			"schema": schema.StringAttribute{
 				MarkdownDescription: "Example configurable attribute",
-				Type:                types.StringType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					&schemaPlanModifier{},
-					resource.RequiresReplace(),
+				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": {
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Example identifier",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				Type: types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -154,7 +145,7 @@ func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRe
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
@@ -164,7 +155,7 @@ func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRe
 }
 
 func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *SchemaResourceModel
+	var data SchemaResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -192,10 +183,24 @@ func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	strHash, _ := calculateHashFromFile(data.Schema.ValueString())
+	// If applicable, this is a great opportunity to initialize any necessary
+	// provider client data and make a call using it.
+	// httpResp, err := r.client.Do(httpReq)
+	// if err != nil {
+	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create example, got error: %s", err))
+	//     return
+	// }
 
-	data.SchemaHash = types.StringValue(strHash)
+	// For the purposes of this example code, hardcoding a response value to
+	// save into the Terraform state.
 	data.Id = types.StringValue(id)
+
+	hash, err := calculateHashFromFile(data.Schema.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("unable to generate hash for schema", err.Error())
+	}
+
+	data.SchemaHash = types.StringValue(hash)
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -206,7 +211,9 @@ func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *SchemaResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *SchemaResourceModel
+	var data SchemaResourceModel
+
+	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
@@ -222,13 +229,43 @@ func (r *SchemaResource) Read(ctx context.Context, req resource.ReadRequest, res
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read schema, got error: %s", err))
 		return
 	}
+
+	// If applicable, this is a great opportunity to initialize any necessary
+	// provider client data and make a call using it.
+	// httpResp, err := r.client.Do(httpReq)
+	// if err != nil {
+	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
+	//     return
+	// }
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SchemaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data SchemaResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If applicable, this is a great opportunity to initialize any necessary
+	// provider client data and make a call using it.
+	// httpResp, err := r.client.Do(httpReq)
+	// if err != nil {
+	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update example, got error: %s", err))
+	//     return
+	// }
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SchemaResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data *SchemaResourceModel
+	var data SchemaResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -237,31 +274,17 @@ func (r *SchemaResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	err := r.minecraftClient.undoSchema(data.Id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete schema, got error: %s", err))
-		return
-	}
+	// If applicable, this is a great opportunity to initialize any necessary
+	// provider client data and make a call using it.
+	// httpResp, err := r.client.Do(httpReq)
+	// if err != nil {
+	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete example, got error: %s", err))
+	//     return
+	// }
 }
 
 func (r *SchemaResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func calculateHashFromFile(path string) (string, error) {
-	// generate a hash of the file so that we can track changes
-	f, err := os.Open(path)
-	if err != nil {
-		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
-	}
-
-	return base64.StdEncoding.EncodeToString(h.Sum(nil)), nil
 }
 
 type schemaPlanModifier struct{}
@@ -274,7 +297,7 @@ func (s *schemaPlanModifier) MarkdownDescription(ctx context.Context) string {
 	return s.Description(ctx)
 }
 
-func (s *schemaPlanModifier) Modify(ctx context.Context, req tfsdk.ModifyAttributePlanRequest, resp *tfsdk.ModifyAttributePlanResponse) {
+func (s *schemaPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp planmodifier.StringResponse) {
 	// generate a hash from the file
 	attrPath := path.Empty().AtName("schema")
 	schema := ""
@@ -293,13 +316,29 @@ func (s *schemaPlanModifier) Modify(ctx context.Context, req tfsdk.ModifyAttribu
 	newHash, _ := calculateHashFromFile(schema)
 	if newHash != schemaHash {
 		// set the new value and set the requires replace, Terraform will force the resource to be re-created
-		resp.AttributePlan = types.StringValue(newHash)
+		resp.PlanValue = types.StringValue(newHash)
 		resp.RequiresReplace = true
 		resp.Diagnostics.AddWarning(
 			"Schema File Changed",
 			fmt.Sprintf("The file %s has changed from when the resource was originally created, this forces the destruction of the resource. Old file hash: %s, New file hash: %s", schema, schemaHash, newHash),
 		)
 	}
+}
+
+func calculateHashFromFile(path string) (string, error) {
+	// generate a hash of the file so that we can track changes
+	f, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
+	}
+
+	return base64.StdEncoding.EncodeToString(h.Sum(nil)), nil
 }
 ```
 </details>

@@ -45,32 +45,35 @@ Next you can define the schema for the provider.
 ## Defining the Schema
 
 In the same way that a resource has attributes, a provider has the same.
-Configuration of these attributes is done in in the `GetSchema` method.
+Configuration of these attributes is done in in the `Schema` method.
 
 Often you want to make an attribute optional so that it can be configured 
 through alternate sources such as environment variables or configuration 
 files that are read from a default location.
 
 The Minecraft API client needs to be configured with an endpoint and an API key
-let's add these as provider attributes so that they can be confiugured. Update
-the `GetShema` block so that it is the same as the following example. 
+let's add these as provider attributes so that they can be confiugured. 
+
+### Exercise
+Why not have a go at defining an `optional` attribute for the `api_key`,
+the syntax is almost the same as then you added your resource schema.
+
+Did you manage that? If not, don't worry, here is the solution.
 
 ```go
-func (p *MinecraftProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"endpoint": {
+func (p *MinecraftProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"endpoint": schema.StringAttribute{
 				MarkdownDescription: "Example provider attribute",
 				Optional:            true,
-				Type:                types.StringType,
 			},
-			"api_key": {
+			"api_key": schema.StringAttribute{
 				MarkdownDescription: "Example provider attribute",
 				Optional:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 ```
 
@@ -109,7 +112,7 @@ if !data.Endpoint.IsNull() {
 }
 
 if !data.APIKey.IsNull() {
-	endpoint = data.APIKey.ValueString()
+	apiKey = data.APIKey.ValueString()
 }
 
 // override from environment variables if set
@@ -153,8 +156,7 @@ resp.DataSourceData = client
 resp.ResourceData = client	
 ```
 
-The whole method looks like this, replace your `Configure` method with this
-block.
+Your `Configure` method should look like the following example.
 
 ```go
 func (p *MinecraftProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -196,10 +198,10 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	if apiKey == "" && data.APIKey.IsNull() {
+	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Configuration Error",
-			"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
+			"unable to set api_key, please set either the api_key property in the provider or the environment variable 'MINECRAFT_APIKEY'",
 		)
 		return
 	}
@@ -232,28 +234,28 @@ func (p *MinecraftProvider) Metadata(ctx context.Context, req provider.MetadataR
 Your completed provider code should look like the following example.
 
 <details>
-  <summary>provider.go</summary>
+  <summary>**Complete example:** provider.go</summary>
 
 ```go
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
 	"context"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Ensure ScaffoldingProvider satisfies various provider interfaces.
+// Ensure MinecraftProvider satisfies various provider interfaces.
 var _ provider.Provider = &MinecraftProvider{}
-var _ provider.ProviderWithMetadata = &MinecraftProvider{}
 
-// ScaffoldingProvider defines the provider implementation.
+// MinecraftProvider defines the provider implementation.
 type MinecraftProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
@@ -261,32 +263,30 @@ type MinecraftProvider struct {
 	version string
 }
 
-// ScaffoldingProviderModel describes the provider data model.
+// MinecraftProviderModel describes the provider data model.
 type MinecraftProviderModel struct {
 	Endpoint types.String `tfsdk:"endpoint"`
 	APIKey   types.String `tfsdk:"api_key"`
 }
 
 func (p *MinecraftProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "scaffolding"
+	resp.TypeName = "minecraft"
 	resp.Version = p.version
 }
 
-func (p *MinecraftProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"endpoint": {
+func (p *MinecraftProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"endpoint": schema.StringAttribute{
 				MarkdownDescription: "Example provider attribute",
 				Optional:            true,
-				Type:                types.StringType,
 			},
-			"api_key": {
+			"api_key": schema.StringAttribute{
 				MarkdownDescription: "Example provider attribute",
 				Optional:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (p *MinecraftProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -301,40 +301,17 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	endpoint := ""
 	apiKey := ""
 
-	// set endpoint and apiKey from config
+	// set endpoint and apiKey from config if they are not null
 	if !data.Endpoint.IsNull() {
 		endpoint = data.Endpoint.ValueString()
 	}
 
 	if !data.APIKey.IsNull() {
-		apiKey = data.APIKey.ValueString()
+		endpoint = data.APIKey.ValueString()
 	}
 
-	// override from environment variables if set
-	if ep := os.Getenv("MINECRAFT_ENDPOINT"); ep != "" {
-		endpoint = ep
-	}
-
-	if apk := os.Getenv("MINECRAFT_APIKEY"); apk != "" {
-		apiKey = apk
-	}
-
-	// if config is not set, return an error
-	if endpoint == "" {
-		resp.Diagnostics.AddError(
-			"Configuration Error",
-			"Unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_ENDPOINT'",
-		)
-		return
-	}
-
-	if apiKey == "" && data.APIKey.IsNull() {
-		resp.Diagnostics.AddError(
-			"Configuration Error",
-			"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
-		)
-		return
-	}
+	// Configuration values are now available.
+	// if data.Endpoint.IsNull() { /* ... */ }
 
 	// Example client configuration for data sources and resources
 	client := newClient(endpoint, apiKey)
@@ -361,11 +338,10 @@ func New(version string) func() provider.Provider {
 		}
 	}
 }
-
 ```
 </details>
 	
-Let's do one final check to make sure that everything is ok
+Let's do one final check to make sure that everything is ok and the code compiles.
 
 ```shell
 make build
@@ -375,12 +351,4 @@ make build
 go build -o bin/terraform-provider-example_v0.1.0
 ```
 
-Let's now test the provider
-
-	
-	
-	
-	
-	
-	
-	
+We can now test the provider.

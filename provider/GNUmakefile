@@ -20,12 +20,10 @@ install: build clean
 	mv bin/terraform-provider-$(name)_v$(version) ~/.terraform.d/plugins/local/$(organization)/$(name)/$(version)/$(arch)/
 
 clean:
-	rm -rf examples/resources/block/.terraform*
-	rm -rf examples/resources/block/terraform.tfstate*
-	rm -rf examples/resources/schema/.terraform*
-	rm -rf examples/resources/schema/terraform.tfstate*
-	rm -rf examples/data-sources/block/.terraform*
-	rm -rf examples/data-sources/block/terraform.tfstate*
+	rm -rf examples/resources/minecraft_schema/.terraform*
+	rm -rf examples/resources/minecraft_schema/terraform.tfstate*
+	rm -rf examples/data-sources/minecraft_block/.terraform*
+	rm -rf examples/data-sources/minecraft_block/terraform.tfstate*
 
 init:
 	TF_LOG=$(log_level) terraform -chdir=examples/resources/schema init
