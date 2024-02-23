@@ -127,6 +127,7 @@ func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest,
         Computed:            true,
         MarkdownDescription: "Example configurable attribute",
         PlanModifiers: []planmodifier.String{
+          schemaPlanModifier{},
           stringplanmodifier.RequiresReplace(),
         },
       },
@@ -302,15 +303,15 @@ func (r *SchemaResource) ImportState(ctx context.Context, req resource.ImportSta
 
 type schemaPlanModifier struct{}
 
-func (s *schemaPlanModifier) Description(ctx context.Context) string {
+func (s schemaPlanModifier) Description(ctx context.Context) string {
 	return "checks if the file represented by schema has changed"
 }
 
-func (s *schemaPlanModifier) MarkdownDescription(ctx context.Context) string {
+func (s schemaPlanModifier) MarkdownDescription(ctx context.Context) string {
 	return s.Description(ctx)
 }
 
-func (s *schemaPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp planmodifier.StringResponse) {
+func (s schemaPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
 	// generate a hash from the file
 	attrPath := path.Empty().AtName("schema")
 	schema := ""
