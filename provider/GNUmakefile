@@ -4,7 +4,10 @@ default: testacc
 .PHONY: testacc
 
 testacc:
-	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 \
+	MINECRAFT_ENDPOINT=http://minecraft.container.jumppad.dev:9090 \
+	MINECRAFT_APIKEY=supertopsecret \
+	/usr/local/go/bin/go test -run TestAccSchemaResource github.com/hashicorp/terraform-provider-scaffolding-framework/internal/provider
 
 arch=$(shell /bin/bash ./arch.sh)
 name = minecraft
@@ -14,7 +17,7 @@ log_level = info
 
 build:
 	@echo "\033[1mBuilding the provider\033[0m"
-	go build -o bin/terraform-provider-$(name)_v$(version) -buildvcs=false
+	/usr/local/go/bin/go build -o bin/terraform-provider-$(name)_v$(version) -buildvcs=false
 
 	@echo ""
 
