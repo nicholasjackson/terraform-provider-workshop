@@ -13,17 +13,26 @@ version = 0.1.0
 log_level = info
 
 build:
+	@echo "\033[1mBuilding the provider\033[0m"
 	go build -o bin/terraform-provider-$(name)_v$(version) -buildvcs=false
 
+	@echo ""
+
 install: build clean
+	@echo "\033[1mInstalling the provider\033[0m"
 	mkdir -p ~/.terraform.d/plugins/local/$(organization)/$(name)/$(version)/$(arch)
 	mv bin/terraform-provider-$(name)_v$(version) ~/.terraform.d/plugins/local/$(organization)/$(name)/$(version)/$(arch)/
 
+	@echo ""
+
 clean:
+	@echo "\033[1mCleaning up\033[0m"
 	rm -rf examples/resources/minecraft_schema/.terraform*
 	rm -rf examples/resources/minecraft_schema/terraform.tfstate*
 	rm -rf examples/data-sources/minecraft_block/.terraform*
 	rm -rf examples/data-sources/minecraft_block/terraform.tfstate*
+
+	@echo ""
 
 init:
 	TF_LOG=$(log_level) terraform -chdir=examples/resources/schema init

@@ -4,7 +4,7 @@ First you need to build and install your provider, run the following
 command in your terminal.
 
 ```shell
-make build && make install
+make install
 ```
 
 Once that is done change into the directory where you created the example
@@ -85,14 +85,15 @@ example = "minecraft:infested_cracked_stone_bricks"
 
 ## Summary
 
-That is all for now, in this workshop you have learned the basics of Terraform
-provider development using the new Terraform Plugin SDK. While we have only
-implemented a single resource and a single data source, there is no limit to the 
-number of resources and data sources that your provider can contain. You only need
-to create a stuct that implements the correct interface in exactly the same way
-that you have seen today.
+That completes the section on data sources, we hope that by now you are
+starting to feel some familiarity with the framework. All of the concepts
+you have learned in this short workshop enable you to write production ready 
+providers.
 
 If you are feeling curious, why not have a go at adding another resource to
 implement the `block` API.
 
 [http://localhost:9090/redoc#tag/Block](http://localhost:9090/redoc#tag/Block)
+
+Once you are done, let's progress to understand how to write acceptance tests
+in Terraform.

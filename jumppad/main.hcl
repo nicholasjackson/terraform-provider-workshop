@@ -93,6 +93,7 @@ resource "container" "vscode" {
   environment = {
     CONNECTION_TOKEN = variable.vscode_token
     DEFAULT_FOLDER   = "/provider"
+    PATH             = "/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   }
 
   port {

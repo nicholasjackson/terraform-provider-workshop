@@ -42,47 +42,42 @@ Next you will define the schema that Terraform will use to populate your model.
 
 ## Defining the Schema
 
-The schema is configured in the `GetSchema` method, you define attributes that
+The schema is configured in the `Schema` method, you define attributes that
 are either user configurable or computed in exactly the same way that you 
 did when creating the schema resource.
 
-Go ahead and change the `GetSchema` method so that it looks like the following
+Go ahead and change the `Schema` method so that it looks like the following
 example:
 
 ```go
-func (d *BlockDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (d *BlockDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Block data source",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"x": {
-				MarkdownDescription: "Example configurable attribute",
+		Attributes: map[string]schema.Attribute{
+			"x": schema.NumberAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
 			},
-			"y": {
-				MarkdownDescription: "Example configurable attribute",
+			"y": schema.NumberAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
 			},
-			"z": {
-				MarkdownDescription: "Example configurable attribute",
+			"z": schema.NumberAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
 			},
-            "material": {
-				MarkdownDescription: "Example identifier",
-				Type:                types.StringType,
+			"material": schema.StringAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Computed:            true,
 			},
-			"id": {
-				MarkdownDescription: "Example identifier",
-				Type:                types.StringType,
+			"id": schema.StringAttribute{
+				MarkdownDescription: "Block identifier",
 				Computed:            true,
 			},
 		},
-	}, nil
+	}
 }
 ```
 

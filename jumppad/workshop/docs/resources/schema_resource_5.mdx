@@ -123,6 +123,13 @@ func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+      "schema_hash": schema.StringAttribute{
+        Computed:            true,
+        MarkdownDescription: "Example configurable attribute",
+        PlanModifiers: []planmodifier.String{
+          stringplanmodifier.RequiresReplace(),
+        },
+      },
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Example identifier",

@@ -307,7 +307,32 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	}
 
 	if !data.APIKey.IsNull() {
-		endpoint = data.APIKey.ValueString()
+		apiKey = data.APIKey.ValueString()
+	}
+
+  	// override from environment variables if set
+	if ep := os.Getenv("MINECRAFT_ENDPOINT"); ep != "" {
+		endpoint = ep
+	}
+
+	if apk := os.Getenv("MINECRAFT_APIKEY"); apk != "" {
+		apiKey = apk
+	}
+
+	if endpoint == "" {
+		resp.Diagnostics.AddError(
+			"Configuration Error",
+			"Unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_ENDPOINT'",
+		)
+		return
+	}
+
+	if apiKey == "" && data.APIKey.IsNull() {
+		resp.Diagnostics.AddError(
+			"Configuration Error",
+			"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
+		)
+		return
 	}
 
 	// Configuration values are now available.

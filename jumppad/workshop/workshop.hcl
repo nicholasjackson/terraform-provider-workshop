@@ -96,6 +96,14 @@ resource "chapter" "data_sources" {
   }
 }
 
+resource "chapter" "testing" {
+  title = "Testing"
+
+  page "creating" {
+    content = file("docs/testing/testing_1.mdx")
+  }
+}
+
 resource "book" "terraform_provider" {
   title = "Building a Terraform Provider"
 
@@ -104,6 +112,7 @@ resource "book" "terraform_provider" {
     resource.chapter.resources,
     resource.chapter.provider,
     resource.chapter.data_sources,
+    resource.chapter.testing,
   ]
 }
 
