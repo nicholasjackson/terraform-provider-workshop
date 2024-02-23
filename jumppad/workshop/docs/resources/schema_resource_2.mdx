@@ -1,0 +1,257 @@
+# Custom Plan Modifiers
+
+Computed attributes are attributes of your resource schema that are not set by
+the user but are set by your code. They are used to store values that are
+calculated from other attributes or from the state of the resource.
+
+You can use a computed attribute to store the hash of the schema file. This
+will allow Terraform to detect changes to the file and force a replacement. 
+
+```go
+"schema_hash": schema.StringAttribute{
+  Computed:            true,
+  MarkdownDescription: "Example configurable attribute",
+  PlanModifiers: []planmodifier.String{
+    stringplanmodifier.RequiresReplace(),
+  },
+},
+```
+
+However the hash of the file is not changed until the `Create` method is called
+this happens after Terraform has run the plan. To handle this you can use a
+custom plan modifier to check the hash of the file and force a replacement.
+
+## Handling changes to schema files
+
+When you change your Terraform resource for example should you change the
+schema file from `car.zip` to `truck.zip` Terraform will detect this change
+and force a replacement of the resource. As the schema has a `PlanModifier`
+`stringplanmodifier.RequiresReplace()` that forces a replacement.
+
+This is needed because the API does not allow you to mutate a schema, 
+you can only create and delete them. Howwever there is an additional complexity
+what if the file changes but the name does not? Terraform will not detect any 
+changes and will not force a replacement. We can work round this by adding a 
+computed attribute to the resource that stores a hash of the file.
+
+
+However, in order for terraform to understand that the hash has changed it
+needs to run some custom code at plan time. This is done using a custom `PlanModifier`.
+
+Let's look at how you can implement a custom plan modifier.
+
+### Calculating the hash of the file
+
+To handle changes to the underlying schema file, you need to store a hash of
+the file in the Terraform state. The following code block is a pretty standard
+Go way to calculate a hash from a file. Add this to the bottom of your `schema_resource.go`
+file.
+
+```go
+func calculateHashFromFile(path string) (string, error) {
+  // generate a hash of the file so that we can track changes
+  f, err := os.Open(path)
+  if err != nil {
+    return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
+  }
+  defer f.Close()
+
+  h := sha256.New()
+  if _, err := io.Copy(h, f); err != nil {
+    return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
+  }
+
+  return base64.StdEncoding.EncodeToString(h.Sum(nil)), nil
+}
+```
+
+## Custom Plan Modifier
+
+Let's now add the check as a plan modifier which is a block of code that 
+executes when Terraform runs a plan. At this point you can check the existing 
+stored hash with a new computed value from the schema file in the new plan.
+
+To create a plan modifier, you need to create a type that implements the 
+`StringPlanModifier` interface. This interface requires you to implement
+three methods. One from the String interface and two from the `Describer`
+interface.
+
+```go
+type String interface {
+  Describer
+
+  // PlanModifyString should perform the modification.
+  PlanModifyString(context.Context, StringRequest, *StringResponse)
+}
+
+// Describer is the common documentation interface for extensible schema
+// plan modifier functionality.
+type Describer interface {
+  // Description should describe the plan modifier in plain text formatting.
+  // This information is used by provider logging and provider tooling such
+  // as documentation generation.
+  //
+  // The description should:
+  //  - Begin with a lowercase or other character suitable for the middle of
+  //    a sentence.
+  //  - End without punctuation.
+  Description(context.Context) string
+
+  // MarkdownDescription should describe the plan modifier in Markdown
+  // formatting. This information is used by provider logging and provider
+  // tooling such as documentation generation.
+  //
+  // The description should:
+  //  - Begin with a lowercase or other character suitable for the middle of
+  //    a sentence.
+  //  - End without punctuation.
+  MarkdownDescription(context.Context) string
+}
+
+```
+
+Our plan modifier to check the hash looks like the following.
+
+```go
+type schemaPlanModifier struct{}
+
+func (s *schemaPlanModifier) Description(ctx context.Context) string {
+  return "checks if the file represented by schema has changed"
+}
+
+func (s *schemaPlanModifier) MarkdownDescription(ctx context.Context) string {
+  return s.Description(ctx)
+}
+
+func (s *schemaPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp planmodifier.StringResponse) {
+  // generate a hash from the file
+  attrPath := path.Empty().AtName("schema")
+  schema := ""
+  req.Plan.GetAttribute(ctx, attrPath, &schema)
+
+  attrPath = path.Empty().AtName("schema_hash")
+  schemaHash := ""
+  req.Plan.GetAttribute(ctx, attrPath, &schemaHash)
+
+  // if empty probably first apply
+  if schemaHash == "" {
+    return
+  }
+
+  // caclculate and compare the hash
+  newHash, _ := calculateHashFromFile(schema)
+  if newHash != schemaHash {
+    // set the new value and set the requires replace, Terraform will force the resource to be re-created
+    resp.PlanValue = types.StringValue(newHash)
+    resp.RequiresReplace = true
+    resp.Diagnostics.AddWarning(
+      "Schema File Changed",
+      fmt.Sprintf("The file %s has changed from when the resource was originally created, this forces the destruction of the resource. Old file hash: %s, New file hash: %s", schema, schemaHash, newHash),
+    )
+  }
+}
+```
+
+Breaking this down, the following code allows you to get an attribute 
+value from the Terraform plan and set it to a Go type.
+
+```go
+attrPath := path.Empty().AtName("schema")
+schema := ""
+req.Plan.GetAttribute(ctx, attrPath, &schema)
+```
+
+Then you check if the hash has been set; if you do not do this check, then 
+you will return an incorrect error the first time a plan runs since there will
+not be an existing hash to compare.
+
+```go
+if schemaHash == "" {
+  return
+}
+```
+
+Finally, compare the hash and return a warning if things have changed. There is
+no need to return an error as it is legitimate that the schema file
+could change. However, since the API does not accept mutations of schema,
+Terraform needs to destroy the resource and re-create it.
+
+```go
+newHash, _ := calculateHashFromFile(schema)
+if newHash != schemaHash {
+  // set the new value and set the requires replace, Terraform will force the resource to be re-created
+  resp.AttributePlan = types.StringValue(newHash)
+  resp.RequiresReplace = true
+  resp.Diagnostics.AddWarning(
+    "Schema File Changed",
+    fmt.Sprintf("The file %s has changed from when the resource was originally created, this forces the destruction of the resource. Old file hash: %s, New file hash: %s", schema, schemaHash, newHash),
+  )
+}
+```
+
+Add the `schemaPlanModifier` in the previous code block to the bottom of your 
+`schema_resouce.go` file.
+
+You can then update the `schema_hash` attribute to add this modifier to the
+exising collection of `PlanModifier`.
+
+```go
+"schema_hash": schema.StringAttribute{
+  MarkdownDescription: "Example configurable attribute",
+  Computed:            true,
+  PlanModifiers: []planmodifier.String{
+    &schemaPlanModifier{},
+    stringplanmodifier.RequiresReplace(),
+  },
+},
+```
+
+**Note**
+There is already an existing plan modifier `stringplanmodifier.RequiresReplace()`, this 
+tells Terraform to replace the entire resource should the value of this attribute
+change from an existing value in the state.
+
+Finally, let's update the `Create` method to set the hash of the file to the
+`data` model that will be persisted to the state.
+
+```go
+hash, err := calculateHashFromFile(data.Schema.ValueString())
+data.SchemaHash = types.StringValue(hash)
+```
+
+This completes the `Create` method before you move on to the `Read`, method
+let's check that your code compiles. Before you do, there is one small change
+that needs to be made in the `provider.go` file.
+
+## Defining Provider Resources
+
+All resources you create for your provider must be registered so that Terraform
+understands which resources the provider has.
+
+This is done in the `Resources` method for the provider that is defined in
+the file `provider.go`. The method returns a collection of available resources
+it is important to remember that when you create a new resource type, you add it 
+to this collection.
+
+Update the Resources method in the provider so that it looks like the following.
+
+```go
+func (p *ScaffoldingProvider) Resources(ctx context.Context) []func() resource.Resource {
+  return []func() resource.Resource{
+    NewSchemaResource,
+  }
+}
+```
+
+You can then check your code compiles by running `make build` in the terminal.
+
+```shell
+make build
+```
+
+```shell
+go build -o bin/terraform-provider-example_v0.1.0
+```
+
+Assuming all went well, you should have no errors, and you can now move on
+to implementing the `Read` method for the `schema` resource.

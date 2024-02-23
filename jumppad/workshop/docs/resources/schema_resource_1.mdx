@@ -1,0 +1,497 @@
+# Schema - Create
+
+Providers are Go types that implement the `resource.Resource` interface.
+This interface requires that your type has specific methods that Terraform
+will call to process Terraform configuration and convert it into API calls.
+
+The full interface is listed below:
+
+```go
+type Resource interface {
+  // Metadata should return the full name of the resource, such as
+  // examplecloud_thing.
+  Metadata(context.Context, MetadataRequest, *MetadataResponse)
+
+  // Schema should return the schema for this resource.
+  Schema(context.Context, SchemaRequest, *SchemaResponse)
+
+  // Create is called when the provider must create a new resource. Config
+  // and planned state values should be read from the
+  // CreateRequest and new state values set on the CreateResponse.
+  Create(context.Context, CreateRequest, *CreateResponse)
+
+  // Read is called when the provider must read resource values in order
+  // to update state. Planned state values should be read from the
+  // ReadRequest and new state values set on the ReadResponse.
+  Read(context.Context, ReadRequest, *ReadResponse)
+
+  // Update is called to update the state of the resource. Config, planned
+  // state, and prior state values should be read from the
+  // UpdateRequest and new state values set on the UpdateResponse.
+  Update(context.Context, UpdateRequest, *UpdateResponse)
+
+  // Delete is called when the provider must delete the resource. Config
+  // values may be read from the DeleteRequest.
+  //
+  // If execution completes without error, the framework will automatically
+  // call DeleteResponse.State.RemoveResource(), so it can be omitted
+  // from provider logic.
+  Delete(context.Context, DeleteRequest, *DeleteResponse)
+}
+```
+
+You are going to build a resource that interacts with the schema capabilities
+of the Minecraft API that allows you to place a pre-defined structure at the
+given location.
+
+[{{api_url}}:9090/redoc#tag/Schema]({{api_url}}:9090/redoc#tag/Schema)
+
+## Creating a Schema using the API
+
+Let's test this by manually curling the API. Open your Minecraft client either 
+in the browser or with the desktop client and log in.
+
+All blocks in Minecraft are placed in 3D space, x, y, and z. Where `x and z` are
+horizontal coordinates and `y` is a vertical coordinate.
+
+You can determine your position at any time by pressng `F3`, this will show the
+minecraft diagnostics.
+
+![](/assets/schema/position.jpg)
+
+Let's create a car at your current location. The schema for a car is located 
+in the ./schema/car.zip file. Using `curl` you are simulating what Terraform
+will do when a `terraform apply` runs containing one of your custom resources.
+
+```shell
+curl -H 'X-API-Key: supertopsecret' http://minecraft.container.jumppad.dev:9090/v1/schema/-1260/24/288/0 --data-binary @./schemas/car.zip
+```
+
+After executing the API request will return an ID of the schema that can be used 
+to undo the operation and retrieve the details for it.
+
+```
+1668343502799
+```
+
+![](/assets/schema/create.jpg)
+
+## Retrieving the Details of a Schema
+
+You can retrieve the details of the schema you have just applied using
+the following command; remember to replace the id with your id. This will
+be the API called when Terraform reads information for the resource.
+
+Enter the following details in your terminal, replacing the `[id]` with the
+id returned from the previous request.
+
+```shell
+curl -H 'X-API-Key: supertopsecret' http://minecraft.container.jumppad.dev:9090/v1/schema/details/[id]
+```
+
+```json
+{"startX":-1260,"startY":24,"startZ":288,"endX":-1252,"endY":34,"endZ":292}
+```
+
+## Removing a Schema
+
+The API includes a method `v1/schema/undo/[schema id]` that allows you to undo
+the application of the schema created in a previous step. This will be the
+API that your provider will use when destroying a schema resource.
+
+Execute the following command in your terminal, replacing the `[id]` with the
+id returned from the previous request.
+
+```shell
+curl -H 'X-API-Key: supertopsecret' -XDELETE http://minecraft.container.jumppad.dev:9090/v1/schema/undo/[id]
+```
+
+The car you created earlier will now have been removed.
+
+![](./images/schema/remove.jpg)
+
+Let's now start codifying this as a provider resource.
+
+## Creating the Examples
+
+Before you write any code, first, let's define the resources as HCL examples.
+
+Rather than creating new files, you can modify the files created by the
+template. First, let's rename the folder 
+
+`./examples/resources/scaffolding_example`
+
+to 
+
+`./examples/resources/minecraft_schema`
+
+### Adding the provider stanza
+
+Then let's modify the `resource.tf` file inside it. You can remove all the
+existing content, and then we can add the new `provider block.
+
+The provider stanza defines the providers and their versions that the config will use. 
+The following block represents the configuration your provider.
+
+```javascript
+terraform {
+  required_providers {
+    minecraft = {
+      source  = "local/hashicraft/minecraft"
+      version = "0.1.0"
+    }
+  }
+}
+```
+
+**Note:**  
+Source is prefixed with `local` this differentiates it from a provider
+that is pulled from the Terraform registry. This corresponds to the `local`
+folder where the plugin is installed.
+
+`~/.terraform.d/plugins/local/`
+
+Next, let's define the provider stanza; the API needs a key for authentication. 
+You will add that and the location of the API as custom parameters in the
+provider.
+
+```javascript
+provider "minecraft" {
+  endpoint = "http://minecraft.container.jumppad.dev:9090"
+  api_key = "supertopsecret"
+}
+```
+
+Finally, create the `minecraft_schema` resource; once completed, you can 
+begin writing the code that will interact with these.
+
+```javascript
+resource "minecraft_schema" "car" {
+  x = -1278
+  y = 24
+  z = 288
+  rotation = 270
+  schema = "../../../schemas/car.zip"
+}
+```
+
+We will use these when testing our provider, but you first need to write the 
+code. Let's do that now.
+
+## Creating the Schema Resource
+
+Like you did with the examples, let's modify an existing file for creating 
+the schema resource. First, rename the file
+
+`internal/provider/example_resource.go`
+
+to 
+
+`internal/provider/schema_resource.go`
+
+Then let's rename all the `ExampleResource` references to `SchemaResource`
+you will need to change all of the references.
+
+Next, you need to define the `SchemaResourceModel`, this struct is where
+Terraform will serialize the HCL configurations. It uses struct tags
+similar to defining tags for JSON serialization and deserialzation.
+
+The model must have all the fields used when Terraform processes your config
+or serializes it to the state. For the `schema` example, it will look like the following.
+
+```go
+type SchemaResourceModel struct {
+  X          types.Number `tfsdk:"x"`
+  Y          types.Number `tfsdk:"y"`
+  Z          types.Number `tfsdk:"z"`
+  Rotation   types.Number `tfsdk:"rotation"`
+  Schema     types.String `tfsdk:"schema"`
+  SchemaHash types.String `tfsdk:"schema_hash"`
+  Id         types.String `tfsdk:"id"`
+}
+```
+
+**Note**  
+The `SchemaResourceModel` does not use standard Go types; it uses SDK types.
+When Terraform deserializes your configuration, it needs to differentiate a missing 
+value from an empty value. In Go, a defined type has a base value. It is not nil 
+unless it is a reference.
+
+Next, let's modify the `Metadata`. The Metadata method is called by Terraform
+when it creates your resource. It tells Terraform how to link your resource
+type to the configuration.
+
+```go
+func (r *SchemaResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+  resp.TypeName = req.ProviderTypeName + "_schema"
+}
+```
+
+## Defining the schema
+
+Next, you need to define the schema that allows you to specify the validation 
+rules, like optional or computed attributes. Computed attributes are set by 
+your code; the end user does not set them.
+
+### Required attribute
+
+A basic example of a required attribute looks like the following. This is
+a number type that, when changed in the state, will force Terraform to
+perform a destroy operation on the provider before it creates a new resource.
+
+In the Schema API example, it is impossible to mutate a schema; any elements that
+change need to force a replacement. This is set by using the `PlanModifiers` and
+the `resource.RequiresReplace` function.
+
+```go
+"x": {
+    MarkdownDescription: "Example configurable attribute",
+    Required:            true,
+    Type:                types.NumberType,
+    PlanModifiers: []tfsdk.AttributePlanModifier{
+      resource.RequiresReplace(),
+    },
+  },
+```
+
+
+## Exercise
+Why not have a go at defining the schema for the HCL resouce that you just created?
+
+Did you manage to complete that?
+
+The Schema should look like the following example.
+
+```go
+func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		// This description is used by the documentation generator and the language server.
+		MarkdownDescription: "Example resource",
+
+		Attributes: map[string]schema.Attribute{
+			"x": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"y": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"z": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"rotation": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"schema": schema.StringAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "Example identifier",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+		},
+	}
+}
+```
+
+## Configuring the API Client
+
+To interact with the API, you need to know the endpoint and the APIKey. Ideally, 
+each resource will not create the client itself. The client should be injected 
+into the resource, and the SDK has a mechanism for this with the `Configure`
+method.
+
+The example code already has a client defined in the file `client.go`. This 
+wraps the RESTFul API with Go types and methods. You will learn how this is 
+configured when we look at the `Provider` type. 
+
+For now, let's modify the client injection code in `Configure` method to use the 
+`minecraftClient`. Rename `client` to `minecraftClient` and change the type to 
+`*client`, which is  the go client for the API from this package. You can then 
+update the configure block to look like the following example.
+
+```go
+func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+  // Prevent panic if the provider has not been configured.
+  if req.ProviderData == nil {
+    return
+  }
+
+  client, ok := req.ProviderData.(*client)
+
+  if !ok {
+    resp.Diagnostics.AddError(
+      "Unexpected Resource Configure Type",
+      fmt.Sprintf("Expected *client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+    )
+
+    return
+  }
+
+  r.minecraftClient = client
+}
+```
+
+## Creating Resources
+
+When Terraform wants to create a resource, it calls the `Create` method on
+your provider.  In this method, you make any necessary API calls to create 
+the things your resource defines. In our example, this will be to call 
+the `v1/schema` API on the Minecraft server with the correct
+details.
+
+If you look at the `Create` method, you will see the following code at the
+top.
+
+```go
+var data SchemaResourceModel
+
+// Read Terraform plan data into the model
+resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+if resp.Diagnostics.HasError() {
+  return
+}
+```
+
+What this code does is deserialize the Terraform resources written in HCL
+and converts them into your data model.
+
+The `Get` method returns a `diag.Diagnostics` type, this is an SDK type that
+is used for rich error messages and logging. When building a provider, you 
+will use this type instead of logging to StdOut or returning errors from methods. 
+
+`diag.Diagnostics` ensures that any log output or error is correctly formatted
+so that the Terraform application can display it consistently for all providers.
+
+To create a schema, you will use the `createSchema` method on the 
+`client`. This method accepts parameters which are `schemaRequest`.
+
+```go
+type schemaRequest struct {
+  X        int    `json:"x"`
+  Y        int    `json:"y"`
+  Z        int    `json:"z"`
+  Rotation int    `json:"rotation"`
+  Schema   string `json:"schema"`
+}
+```
+
+The types for `schemaRequest` are plain go types so to use the fields from
+`data` you will need to convert them. To get the go type from a SDK type
+you can use the sdk.Type methods as follows:
+
+#### converting to int64
+
+```go
+data.X.ValueBigFloat().Int64()
+```
+
+#### converting to string
+
+```go
+data.Schema.ValueString(),
+```
+
+**Note**  
+The reason the SDK uses sdk.Type rather than Go types is to differentate
+between not set and the Go types default value.
+
+If `data.X` has not been set such as when it is an optional attribute then
+the method call `VauleBigFloat()` will panic. You should always code 
+defensively against nil values. In our example this should be safe
+as all the attributes are `required`.
+
+Add the following code block to your `Create` method beneath 
+`if resp.Diagnositcs.HasError() {}`.
+
+```go
+x, _ := data.X.ValueBigFloat().Int64()
+y, _ := data.Y.ValueBigFloat().Int64()
+z, _ := data.Z.ValueBigFloat().Int64()
+rotation, _ := data.Rotation.ValueBigFloat().Int64()
+
+sr := schemaRequest{
+  X:        int(x),
+  Y:        int(y),
+  Z:        int(z),
+  Rotation: int(rotation),
+  Schema:   data.Schema.ValueString(),
+}
+```
+
+
+Now you can call the `createSchema` method to make the API call, this method
+returns an error so you need to halt all further processing and return
+should you get an error back.
+
+Add the following beneath your `schemaRequest`.
+
+```go
+id, err := r.minecraftClient.createSchema(sr)
+if err != nil {
+  resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create example, got error: %s", err))
+  return
+}
+```
+
+Next we need to update the computed attribute that is the ID returned from the
+API. And save the state to the Terraform state. First let's update the `data`
+model to set the ID.
+
+**Note:**
+To convert a Go type to a `sdk.Type` you can use the helper methods
+
+`types.StringValue("mystring")`
+
+and
+
+`types.Float64(23)`
+
+Set the ID to the `data` in your `Create` method.
+
+```go
+data.Id = types.StringValue(id)
+```
+
+Finally, you need to save the state to the Terraform state. This is done with
+the following code.
+
+```go
+resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+```
+
+This code is saves your `SchemaResourceModel` to the Terraform state,
+it is essential that you save your model with the unique id, or Terraform
+will not know how to delete or update it.
+
+So far you have most of the code to create a resource, but there is one 
+more thing you need to do. While terraform can detect the changes in the HCL text
+of your resource, it cannot automatically detect changes to referenced files.
+
+In this example the schema is referenced by a file, if the file changes but
+the file name does not, Terraform will not detect the change. To fix this
+we can create a computed attribute that is the hash of the file and a custom
+plan modifier that forces a replacement if the hash changes.

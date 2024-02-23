@@ -1,0 +1,218 @@
+# Acceptance Testing Resources
+
+We have seen how you can manually test your provider but this is manual process. 
+Manual testing is prone to inconsistencies and mistakes, where possible you should
+always have an automated test suite.
+
+Thankfully Terraform has a Testing framework, it enables you to write full end
+to end acceptance tests against real targets.
+
+Let's take a look at the default file from the scaffolding framework.
+
+```go
+func TestAccExampleResource(t *testing.T) {
+  resource.Test(t, resource.TestCase{
+    PreCheck:                 func() { testAccPreCheck(t) },
+    ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+    Steps: []resource.TestStep{
+      // Create and Read testing
+      {
+        Config: testAccExampleResourceConfig("one"),
+        Check: resource.ComposeAggregateTestCheckFunc(
+          resource.TestCheckResourceAttr("scaffolding_example.test", "configurable_attribute", "one"),
+          resource.TestCheckResourceAttr("scaffolding_example.test", "id", "example-id"),
+        ),
+      },
+      // ImportState testing
+      {
+        ResourceName:      "scaffolding_example.test",
+        ImportState:       true,
+        ImportStateVerify: true,
+        // This is not normally necessary, but is here because this
+        // example code does not have an actual upstream service.
+        // Once the Read method is able to refresh information from
+        // the upstream service, this can be removed.
+        ImportStateVerifyIgnore: []string{"configurable_attribute"},
+      },
+      // Update and Read testing
+      {
+        Config: testAccExampleResourceConfig("two"),
+        Check: resource.ComposeAggregateTestCheckFunc(
+          resource.TestCheckResourceAttr("scaffolding_example.test", "configurable_attribute", "two"),
+        ),
+      },
+      // Delete testing automatically occurs in TestCase
+    },
+  })
+}
+```
+
+You define multiple steps that allow you to test the various features such as
+create, updates, reads, deletes and imports. If you are familliar with table
+driven testing you may assume that the steps are the same as sub tests.
+
+This is not the intention with Terraform tests, the steps are the operations that you
+need to apply to determine an outcome. For example, if you are testing the creation
+of a resource. You only need a single step to run the create with no state and 
+validate the correct outcomes.  However if you wanted to test an update then you would
+define two steps, the first step being the first apply that calls the create method
+and the second being the second apply with existing state that would cause an update.
+
+Delete is always automatically applied for any tests.
+
+To provide configuration for the tests you inject this as part of the test
+step.  If you look at the previous example you will see the following line. 
+
+```
+Config: testAccExampleResourceConfig("one"),
+```
+
+`testAccExampleResourceConfig` allows you to provide configuration for the test
+this function is defined at the bottom of the test and simply returns a string.
+
+```go
+func testAccExampleResourceConfig(configurableAttribute string) string {
+  return fmt.Sprintf(`
+resource "scaffolding_example" "test" {
+  configurable_attribute = %[1]q
+}
+`, configurableAttribute)
+}
+```
+
+Let's modify example_resource_test.go and create a test for the resource.
+
+First let's rename the file to `minecraft_schema_test.go` this is not strictly
+necessary as other than the `test` suffix Go has no file name requirements. But
+it is good practice.
+
+Next let's configure the configuration for the example, for this you can use
+the same resource block that was used in the manual testing.
+
+Replace the `testAccExampleResourceConfig` function in the test file with the block
+below that returns the resource from the example.
+
+Notice that we are able to inject the x, y, and z parameters to make the configuration
+reusable across multiple tests.
+
+```go
+func testAccSchemaResourceConfig(x, y, z int) string {
+  return fmt.Sprintf(`
+resource "minecraft_schema" "car" {
+    x = %d
+    y = %d
+    z = %d
+    rotation = 270
+    schema = "../../../schemas/car.zip"
+  }
+`, x, y, z)
+}
+```
+
+Next, let's define a test step that will run an apply to test the create method.
+
+You specify the `Config` that is going to be used for the test and then the `Check`s
+are the expectations for the test. `TestCheckResourceAttr` is a basic expectation
+check that tests that a particluar parameter has been set in the state of a resource.
+
+In the following example, we are checking that the x, y, and z properties have
+been correctly set.
+
+```go
+{
+  Config: testAccSchemaResourceConfig(1,2,3),
+  Check: resource.ComposeAggregateTestCheckFunc(
+    resource.TestCheckResourceAttr("minecraft_schema.car", "x", 1),
+    resource.TestCheckResourceAttr("minecraft_schema.car", "y", 2),
+    resource.TestCheckResourceAttr("minecraft_schema.car", "z", 3),
+  ),
+},
+```
+
+Replace the steps in the test file with the above code, your final example should look
+like the following. 
+
+```go
+func TestAccSchemaResource(t *testing.T) {
+  resource.Test(t, resource.TestCase{
+    PreCheck:                 func() { testAccPreCheck(t) },
+    ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccSchemaResourceConfig(-1260,24,288),
+        Check: resource.ComposeAggregateTestCheckFunc(
+          resource.TestCheckResourceAttr("minecraft_schema.car", "x", "-1260"),
+          resource.TestCheckResourceAttr("minecraft_schema.car", "y", "24"),
+          resource.TestCheckResourceAttr("minecraft_schema.car", "z", "288"),
+        ),
+      },
+    },
+  })
+}
+
+func testAccSchemaResourceConfig(x, y, z int) string {
+  return fmt.Sprintf(`
+resource "minecraft_schema" "car" {
+    x = %d
+    y = %d
+    z = %d
+    rotation = 270
+    schema = "../../schemas/car.zip"
+  }
+`, x, y, z)
+}
+```
+
+### Configuring the provider for testing
+
+Finally, before we run the tests, we need to cofigure the provider to be
+automatically injected. We do not want to have to build and install the provider
+everytime we run a test.
+
+If you open the file `provider_test.go` you will see the following lines
+
+```go
+var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"scaffolding": providerserver.NewProtocol6WithError(New("test")()),
+}
+```
+
+Change this to the following example so that you are injecting the minecraft provider
+
+```go
+var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"minecraft": providerserver.NewProtocol6WithError(New("test")()),
+}
+```
+
+## Running the tests
+
+Finally with all this configured you can run the tests, the most important thing
+to remember about runing the test is:
+
+**Acceptance tests for Terraform will not run unless the environment variable
+TF_ACC is set to a value of 1**
+
+This is because your provider might contain both standard unit tests and acceptance tests.
+Since both of these are executed by go test the environment variable gives you a way
+of enabling or disabling slow tests.
+
+Since this is an acceptance test, you also need to set the environment varialbes for
+the `MINECRAFT_ENDPOINT` and the `MINECRAFT_APIKEY`. Once all this all set you can run
+the following command in the terminal.
+
+```shell
+TF_ACC=1 \
+MINECRAFT_ENDPOINT=http://minecraft.container.jumppad.dev:9090 \
+MINECRAFT_APIKEY=supertopsecret \
+go test -run TestAccSchemaResource github.com/hashicorp/terraform-provider-scaffolding-framework/internal/provider
+```
+
+If all was correct you should see the following output
+
+```shell
+ok      github.com/hashicorp/terraform-provider-scaffolding-framework/internal/provider 0.685s
+```
+
+That completes the basics of acceptance testing for Terraform providers and the
+workshop.
