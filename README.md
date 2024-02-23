@@ -7,7 +7,7 @@ world.
 To follow the steps in this workshop you will need the following tools installed and configured:
 
 ### Required:
-* Shipyard [https://shipyard.run/docs/install](https://shipyard.run/docs/install)
+* Jumppad [https://jumppad.dev/docs/introduction/installation](https://jumppad.dev/docs/introduction/installation)
 * Docker [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/)
 
 ### Optional:
@@ -26,31 +26,31 @@ First clone this repository, you will need all the files locally.
 git clone https://github.com/nicholasjackson/terraform-provider-workshop.git
 ```
 
-Next, you will need to install Docker and Shipyard, Docker can be downloaded from
+Next, you will need to install Docker and Jumppad, Docker can be downloaded from
 [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/) or 
 installed using a package manager.
 
-Shipyard is a small binary application that automates the creation of Docker containers, it is like 
+Jumpoad is a small binary application that automates the creation of Docker containers, it is like 
 a cross between Docker Compose and Terraform. To run the environment you will need to have Shipyard
 installed. You can find installations for most environments on the install page:
 
-[https://shipyard.run/docs/install](https://shipyard.run/docs/install)
+[https://jumppad.dev/docs/introduction/installation](https://jumppad.dev/docs/introduction/installation)
 
 Or if you prefer you can download the latest binary from Github releases:
 
-[https://github.com/shipyard-run/shipyard/releases/tag/v0.4.14](https://github.com/shipyard-run/shipyard/releases/tag/v0.4.14)
+[https://github.com/jumppad-labs/jumppad/releases/tag/0.7.0](https://github.com/jumppad-labs/jumppad/releases/tag/0.7.0)
 
-Once Shipyard is installed and Docker is running, you can use the following command to start the environment.
+Once Jumppad is installed and Docker is running, you can use the following command to start the environment.
 
 ```shell
-shipyard run ./shipyard
+jumppad up ./jumppad
 ```
 
-Shipyard will pull the required Docker containers from Docker Hub, the environment is approximately 2GB and may
+Jumppad will pull the required Docker containers from Docker Hub, the environment is approximately 2GB and may
 take a short while to initialize.
 
 ```shell
-Running configuration from:  ./shipyard
+Running configuration from:  ./jumppad
 
 2022-11-09T16:48:46.808Z [INFO]  Creating resources from configuration: path=/home/nicj/go/src/github.com/nicholasjackson/terraform-provider-workshop/shipyard
 2022-11-09T16:48:46.810Z [INFO]  Creating Network: ref=local
@@ -61,23 +61,34 @@ Running configuration from:  ./shipyard
 2022-11-09T16:48:46.919Z [INFO]  Creating Container: ref=minecraft
 ```
 
-If you run a `shipyard status` you will see the following:
+If you run a `jumppad status` you will see the following:
 
 ```
-➜ shipyard status
+➜ jumppad status
+✔  module.workshop.resource.chapter.data_sources
+✔  module.workshop.resource.chapter.testing
+✔  module.workshop.resource.chapter.provider
+✔  module.workshop.resource.chapter.introduction
+✔  module.workshop.resource.chapter.resources
+✔  resource.network.main
+✔  resource.copy.server_files
+✔  resource.copy.source_files
+✔  resource.container.minecraft_web
+    └─ minecraft-web.container.jumppad.dev
+✔  resource.container.minecraft
+    └─ minecraft.container.jumppad.dev
+✔  resource.container.vscode
+    └─ vscode.container.jumppad.dev
+✔  resource.docs.docs
+✔  resource.image_cache.default
+✔  resource.template.vscode_settings
+✔  resource.template.vscode_jumppad
+✔  module.workshop.resource.book.terraform_provider
 
-STATUS        RESOURCE                       FQDN
-[ CREATED ]   image_cache.docker-cache       docker-cache.image-cache.shipyard.run
-[ CREATED ]   container.vscode               vscode.container.shipyard.run
-[ CREATED ]   container.minecraft            minecraft.container.shipyard.run
-[ CREATED ]   container.minecraft_web        minecraft-web.container.shipyard.run
-[ CREATED ]   docs.docs
-[ CREATED ]   network.local
-
-Pending: 0 Created: 6 Failed: 0
+Pending: 0  Created: 16  Failed: 0  Disabled: 0
 ```
 
-And since Shipyard just wraps Docker you can see the containers running with `docker ps` 
+And since Jumppad just wraps Docker you can see the containers running with `docker ps` 
 
 ```
 ➜ docker ps
@@ -93,7 +104,7 @@ d433e7f2133f   shipyardrun/docs:v0.6.1                   "./entrypoint.sh"      
 
 To use the workshop environment, open the following link in your browser:
 
-[http://localhost:8000/?folder=/home/src/provider](http://localhost:8000/?folder=/home/src/provider)
+[http://localhost:8000/?folder=/provider](http://localhost:8000/?folder=/provider)
 
 You will see the in built documentation
 
@@ -113,7 +124,7 @@ you make in the browser based environment will be discarded when it terminates.
 To stop the environment you can use the following command:
 
 ```shell
-shipyard destroy
+jumppad destroy
 ```
 
 The conainers used by the environment will be disposed.
@@ -132,12 +143,12 @@ The conainers used by the environment will be disposed.
 To clean up and remove any resources downloaded by the environment you can use the following command:
 
 ```
-shipyard purge
+jumppad purge
 ```
 
 This command removes any Docker images that the workshop uses, only run this command once you are
 completely done with the workshop or you will have to pull all the Docker containers again
-next time you run `shipyard run`.
+next time you run `jumppad run`.
 
 ```
 2022-11-09T17:01:00.601Z [INFO]  Removing image: image=docker.io/library/alpine:latest
