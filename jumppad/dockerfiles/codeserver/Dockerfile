@@ -19,8 +19,8 @@ RUN wget -O terraform.zip https://releases.hashicorp.com/terraform/1.8.5/terrafo
   mv terraform /usr/local/bin
 
 # Install VSCode extensions
-RUN code-server --install-extension hashicorp.terraform & \
-  code-server --install-extension hashicorp.hcl & \
+RUN code-server --install-extension hashicorp.terraform && \
+  code-server --install-extension hashicorp.hcl && \
   code-server --install-extension golang.go
 
 # Install Go tools

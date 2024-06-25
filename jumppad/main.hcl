@@ -9,7 +9,7 @@ variable "docs_url" {
 
 variable "prismarine_url" {
   description = "The URL for prismarine"
-  default     = "http://localhost:8080"
+  default     = "http://minecraft-web.container.local.jmpd.in:8080"
 }
 
 variable "minecraft_url" {
@@ -66,6 +66,14 @@ resource "template" "vscode_settings" {
   destination = "${data("vscode")}/settings.json"
 }
 
+resource "template" "bash_rc" {
+  source = <<-EOF
+  export PATH=$PATH:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  EOF
+
+  destination = "${data("bash")}/.bashrc"
+}
+
 resource "container" "vscode" {
   network {
     id = resource.network.main.meta.id
@@ -88,6 +96,11 @@ resource "container" "vscode" {
   volume {
     source      = resource.template.vscode_settings.destination
     destination = "/provider/.vscode/settings.json"
+  }
+
+  volume {
+    source      = resource.template.bash_rc.destination
+    destination = "/root/.bashrc"
   }
 
   environment = {
