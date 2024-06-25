@@ -1,5 +1,5 @@
 resource "network" "main" {
-  subnet = "10.0.0.0/16"
+  subnet = "10.100.0.0/16"
 }
 
 variable "docs_url" {
@@ -14,12 +14,12 @@ variable "prismarine_url" {
 
 variable "minecraft_url" {
   description = "The URL for the Minecraft server"
-  default     = "minecraft.container.jumppad.dev"
+  default     = "minecraft.container.local.jmpd.in"
 }
 
 variable "api_url" {
   description = "The URL for the Minecraft API"
-  default     = "http://localhost:9090"
+  default     = "http://minecraft.container.local.jmpd.in:9090"
 }
 
 variable "vscode_token" {
@@ -72,7 +72,7 @@ resource "container" "vscode" {
   }
 
   image {
-    name = "nicholasjackson/terraform-provider-workshop:v0.2.0"
+    name = "nicholasjackson/terraform-provider-workshop:v0.3.0"
   }
 
   volume {
@@ -125,13 +125,17 @@ module "workshop" {
     docs_url          = variable.docs_url
     minecraft_url     = variable.minecraft_url
     prismarine_url    = variable.prismarine_url
-    redoc_url         = variable.redoc_url
+    api_url           = variable.api_url
   }
 }
 
 resource "docs" "docs" {
   network {
     id = resource.network.main.meta.id
+  }
+
+  image {
+    name = "ghcr.io/jumppad-labs/docs:v0.5.0"
   }
 
   /* 

@@ -1,5 +1,5 @@
 REPO=nicholasjackson/terraform-provider-workshop
-VERSION=v0.2.0
+VERSION=v0.3.0
 
 build_codeserver:
 	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes

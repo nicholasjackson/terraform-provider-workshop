@@ -25,7 +25,7 @@ this workshop. Before continuing, let's explore this.
 
 The API for the Minecraft server is running at:
 
-[{{ api_url }}]({{ api_url }})
+<Link href="{{ api_url }}" target="_blank"/>
 
 You will use this when interacting with your Terraform provider through the
 provided go client SDK.
@@ -33,8 +33,7 @@ provided go client SDK.
 Documentation for this API can be seen by viewing the `ReDoc` documentation at
 the following location:
 
-[{{ api_url }}/redoc]({{ api_url }}/redoc)
-
+<Link href="{{ api_url }}/redoc" target="redoc" name="redoc"/>
 
 ### Minecraft
 
@@ -47,10 +46,10 @@ browser-based viewer or your own Minecraft client.
 To connect using your own Minecraft client, you can use the following settings
 when adding a new server in the multiplayer options. 
 
-```
-Server: {{ minecraft_url }}
-Port: 25565
-```
+|         |                     |
+|---------|---------------------|
+| Server  | {{ minecraft_url }} |
+| Port    | 25565               |
 
 ![](/assets/getting_started/minecraft_client_1.jpg)
 
