@@ -8,6 +8,9 @@ jobs:
   functional_test:
     name: Test Docker
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
       - name: Docker
           uses: dagger/dagger-for-github@v5
           with:
