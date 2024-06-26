@@ -118,10 +118,10 @@ resource "container" "vscode" {
   health_check {
     timeout = "100s"
 
-    //http {
-    //  address       = "http://${resource.docs.docs.fqdn}/docs/provider/introduction/what_is_terraform"
-    //  success_codes = [200]
-    //}
+    http {
+      address       = "http://${resource.docs.docs.fqdn}"
+      success_codes = [200]
+    }
 
     http {
       address       = "http://localhost:8000/"

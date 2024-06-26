@@ -41,4 +41,4 @@ systemctl enable jumppad-connector.service
 # Pre-pull docker images
 for IMAGE in $JUMPPAD_IMAGES; do
   docker pull $IMAGE
-done  
+done
