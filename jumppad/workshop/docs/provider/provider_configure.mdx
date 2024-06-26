@@ -60,6 +60,8 @@ the syntax is almost the same as then you added your resource schema.
 
 Did you manage that? If not, don't worry, here is the solution.
 
+<Solution title="Solution">
+
 ```go
 func (p *MinecraftProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
@@ -77,6 +79,8 @@ func (p *MinecraftProvider) Schema(ctx context.Context, req provider.SchemaReque
 }
 ```
 
+</Solution>
+
 ## Configuring the Provider
 
 Now that you have defined the configuration you can configure the provider,
@@ -90,7 +94,7 @@ Data is deserialized in a very similar way to how you did it when creating the
 resource.
 
 ```go
-var data ScaffoldingProviderModel
+var data MinecraftProviderModel
 
 resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -137,7 +141,7 @@ if endpoint == "" {
 	return
 }
 
-if apiKey == "" && data.APIKey.IsNull() {
+if apiKey == "" {
 	resp.Diagnostics.AddError(
 		"Configuration Error",
 		"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
@@ -153,10 +157,12 @@ passing it the two values you have just obtained.
 // Example client configuration for data sources and resources
 client := newClient(endpoint, apiKey)
 resp.DataSourceData = client
-resp.ResourceData = client	
+resp.ResourceData = client
 ```
 
 Your `Configure` method should look like the following example.
+
+<Solution title="Configure method">
 
 ```go
 func (p *MinecraftProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -189,7 +195,6 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 		apiKey = apk
 	}
 
-	// if config is not set, return an error
 	if endpoint == "" {
 		resp.Diagnostics.AddError(
 			"Configuration Error",
@@ -201,7 +206,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Configuration Error",
-			"unable to set api_key, please set either the api_key property in the provider or the environment variable 'MINECRAFT_APIKEY'",
+			"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
 		)
 		return
 	}
@@ -212,6 +217,8 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	resp.ResourceData = client
 }
 ```
+
+</Solution>
 
 ## Configuring the Provider Metadata
 
@@ -233,8 +240,7 @@ func (p *MinecraftProvider) Metadata(ctx context.Context, req provider.MetadataR
 
 Your completed provider code should look like the following example.
 
-<details>
-  <summary>**Complete example:** provider.go</summary>
+<Solution title="internal/provider/provider.go">
 
 ```go
 // Copyright (c) HashiCorp, Inc.
@@ -244,6 +250,7 @@ package provider
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -301,7 +308,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 	endpoint := ""
 	apiKey := ""
 
-	// set endpoint and apiKey from config if they are not null
+	// set endpoint and apiKey from config
 	if !data.Endpoint.IsNull() {
 		endpoint = data.Endpoint.ValueString()
 	}
@@ -310,7 +317,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 		apiKey = data.APIKey.ValueString()
 	}
 
-  	// override from environment variables if set
+	// override from environment variables if set
 	if ep := os.Getenv("MINECRAFT_ENDPOINT"); ep != "" {
 		endpoint = ep
 	}
@@ -327,16 +334,13 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	if apiKey == "" && data.APIKey.IsNull() {
+	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Configuration Error",
 			"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
 		)
 		return
 	}
-
-	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
 
 	// Example client configuration for data sources and resources
 	client := newClient(endpoint, apiKey)
@@ -364,8 +368,9 @@ func New(version string) func() provider.Provider {
 	}
 }
 ```
-</details>
-	
+
+</Solution>
+
 Let's do one final check to make sure that everything is ok and the code compiles.
 
 ```shell

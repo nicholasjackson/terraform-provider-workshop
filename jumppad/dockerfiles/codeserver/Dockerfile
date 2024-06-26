@@ -1,6 +1,6 @@
 FROM golang:1.22.4 as golang
 
-FROM ghcr.io/jumppad-labs/vscode:vscode-v0.5.1
+FROM ghcr.io/jumppad-labs/vscode:vscode-v0.5.2
 
 ARG TARGETARCH
 
@@ -20,6 +20,7 @@ RUN wget -O terraform.zip https://releases.hashicorp.com/terraform/1.8.5/terrafo
 
 # Install VSCode extensions
 RUN code-server --install-extension hashicorp.terraform && \
+  code-server --install-extension hashicorp.hcl && \
   code-server --install-extension hashicorp.hcl && \
   code-server --install-extension golang.go
 

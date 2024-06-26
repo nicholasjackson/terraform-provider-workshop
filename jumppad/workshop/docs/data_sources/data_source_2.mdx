@@ -78,35 +78,35 @@ func (d *BlockDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-  x,_ := data.X.ValueBigFloat().Int64()
-  y,_ := data.Y.ValueBigFloat().Int64()
-  z,_ := data.Z.ValueBigFloat().Int64()
+	x, _ := data.X.ValueBigFloat().Int64()
+	y, _ := data.Y.ValueBigFloat().Int64()
+	z, _ := data.Z.ValueBigFloat().Int64()
 
-  block, err := d.minecraftClient.getBlock(int(x), int(y), int(z))
-  if err != nil {
-    resp.Diagnostics.AddError( 
-      "Unable to retrieve block",
-      fmt.Sprintf("Unable to get block, got error: %s", err),
-    )
+	block, err := d.minecraftClient.getBlock(int(x), int(y), int(z))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to retrieve block",
+			fmt.Sprintf("Unable to get block, got error: %s", err),
+		)
+		return
+	}
 
-    return
-  }
- 
-  data.Material = types.StringValue(block.Material)
-  data.Id = types.StringValue(block.ID)
-  
-  // Write logs using the tflog package
-  // Documentation: https://terraform.io/plugin/log
-  tflog.Trace(ctx, "read a data source")
-  // Save data into Terraform state
-  resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	data.Material = types.StringValue(block.Material)
+	data.Id = types.StringValue(block.ID)
+
+	// Write logs using the tflog package
+	// Documentation: https://terraform.io/plugin/log
+	tflog.Trace(ctx, "read a data source")
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 ```
 
 Your full example should look like the following
 
-<details>
-  <summary>**Completed example:** block_data_source.go</summary>
+
+<Solution title="intenal/provider/block_data_source.go">
 
 ```go
 // Copyright (c) HashiCorp, Inc.
@@ -178,6 +178,7 @@ func (d *BlockDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 		},
 	}
 }
+
 func (d *BlockDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
@@ -218,7 +219,6 @@ func (d *BlockDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			"Unable to retrieve block",
 			fmt.Sprintf("Unable to get block, got error: %s", err),
 		)
-
 		return
 	}
 
@@ -228,13 +228,21 @@ func (d *BlockDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "read a data source")
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 ```
-</details>
+
+</Solution>
 
 ## Testing the Provider Compiles
 
 Let's test that the provider code compiles and you can write an example
 configuration that uses the new data source.
+
+```shell
+make build
+```
+
+Next let's create an example configuration that uses the new data source.

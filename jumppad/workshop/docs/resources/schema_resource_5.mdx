@@ -27,8 +27,7 @@ if err != nil {
 That completes all that is needed for the `SchemaResource`, your final file
 should look like the following.
 
-<details>
-  <summary>**Completed example:** schema_resource.go</summary>
+<Solution title="internal/provider/schema_resource.go">
 
 ```go
 // Copyright (c) HashiCorp, Inc.
@@ -123,14 +122,14 @@ func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-      "schema_hash": schema.StringAttribute{
-        Computed:            true,
-        MarkdownDescription: "Example configurable attribute",
-        PlanModifiers: []planmodifier.String{
-          schemaPlanModifier{},
-          stringplanmodifier.RequiresReplace(),
-        },
-      },
+			"schema_hash": schema.StringAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					&schemaPlanModifier{},
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Example identifier",
@@ -153,7 +152,7 @@ func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRe
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
@@ -191,23 +190,12 @@ func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create example, got error: %s", err))
-	//     return
-	// }
-
-	// For the purposes of this example code, hardcoding a response value to
-	// save into the Terraform state.
 	data.Id = types.StringValue(id)
 
 	hash, err := calculateHashFromFile(data.Schema.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("unable to generate hash for schema", err.Error())
+		resp.Diagnostics.AddError("Unable to generate hash for file", err.Error())
 	}
-
 	data.SchemaHash = types.StringValue(hash)
 
 	// Write logs using the tflog package
@@ -237,14 +225,6 @@ func (r *SchemaResource) Read(ctx context.Context, req resource.ReadRequest, res
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read schema, got error: %s", err))
 		return
 	}
-
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
-	//     return
-	// }
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -282,23 +262,31 @@ func (r *SchemaResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-  err := r.minecraftClient.undoSchema(data.Id.ValueString())
-  if err != nil {
-  	resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete schema, got error: %s", err))
-  	return
-  }
-
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete example, got error: %s", err))
-	//     return
-	// }
+	err := r.minecraftClient.undoSchema(data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete schema, got error: %s", err))
+		return
+	}
 }
 
 func (r *SchemaResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func calculateHashFromFile(path string) (string, error) {
+	// generate a hash of the file so that we can track changes
+	f, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("unable to generate hash for schema file: %s", err)
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", fmt.Errorf("unable to generate hash for schema file: %s", err)
+	}
+
+	return base64.StdEncoding.EncodeToString(h.Sum(nil)), nil
 }
 
 type schemaPlanModifier struct{}
@@ -338,23 +326,8 @@ func (s schemaPlanModifier) PlanModifyString(ctx context.Context, req planmodifi
 		)
 	}
 }
-
-func calculateHashFromFile(path string) (string, error) {
-	// generate a hash of the file so that we can track changes
-	f, err := os.Open(path)
-	if err != nil {
-		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
-	}
-
-	return base64.StdEncoding.EncodeToString(h.Sum(nil)), nil
-}
 ```
-</details>
+
+</Solution>
 
 Let's now make a few modifications to `provider.go` and you can test your provider.

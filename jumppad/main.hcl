@@ -80,7 +80,7 @@ resource "container" "vscode" {
   }
 
   image {
-    name = "nicholasjackson/terraform-provider-workshop:v0.3.0"
+    name = "nicholasjackson/terraform-provider-workshop:v0.3.1"
   }
 
   volume {
@@ -148,7 +148,7 @@ resource "docs" "docs" {
   }
 
   image {
-    name = "ghcr.io/jumppad-labs/docs:v0.5.0"
+    name = "ghcr.io/jumppad-labs/docs:v0.5.1"
   }
 
   /* 

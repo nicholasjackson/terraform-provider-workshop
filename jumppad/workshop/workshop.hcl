@@ -72,7 +72,12 @@ resource "chapter" "provider" {
   }
 
   page "manual_testing" {
-    content = file("docs/provider/manual_testing.mdx")
+    content = template_file("docs/provider/manual_testing.mdx", {
+      docs_url       = variable.docs_url
+      prismarine_url = variable.prismarine_url
+      minecraft_url  = variable.minecraft_url
+      api_url        = variable.api_url
+    })
   }
 }
 
@@ -88,19 +93,31 @@ resource "chapter" "data_sources" {
   }
 
   page "config" {
-    content = file("docs/data_sources/data_source_3.mdx")
+    content = template_file("docs/data_sources/data_source_3.mdx", {
+      docs_url       = variable.docs_url
+      prismarine_url = variable.prismarine_url
+      minecraft_url  = variable.minecraft_url
+      api_url        = variable.api_url
+    })
   }
 
   page "manual_testing" {
-    content = file("docs/data_sources/manual_testing.mdx")
+    content = template_file("docs/data_sources/manual_testing.mdx", {
+      docs_url       = variable.docs_url
+      prismarine_url = variable.prismarine_url
+      minecraft_url  = variable.minecraft_url
+      api_url        = variable.api_url
+    })
   }
 }
 
 resource "chapter" "testing" {
   title = "Testing"
 
-  page "creating" {
-    content = file("docs/testing/testing_1.mdx")
+  page "testing" {
+    content = template_file("docs/testing/testing_1.mdx", {
+      api_url = variable.api_url
+    })
   }
 }
 
