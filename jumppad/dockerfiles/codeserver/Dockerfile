@@ -1,6 +1,6 @@
-FROM golang:1.22.0 as golang
+FROM golang:1.22.4 as golang
 
-FROM ghcr.io/jumppad-labs/vscode:base-v0.4.0
+FROM ghcr.io/jumppad-labs/vscode:vscode-v0.5.2
 
 ARG TARGETARCH
 
@@ -14,13 +14,14 @@ RUN rm -rf /var/lib/apt/lists/*
 COPY --from=golang /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
 
-RUN wget -O terraform.zip https://releases.hashicorp.com/terraform/1.7.3/terraform_1.7.3_linux_${TARGETARCH}.zip && \
+RUN wget -O terraform.zip https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_${TARGETARCH}.zip && \
   unzip terraform.zip && \
   mv terraform /usr/local/bin
 
 # Install VSCode extensions
-RUN code-server --install-extension hashicorp.terraform & \
-  code-server --install-extension hashicorp.hcl & \
+RUN code-server --install-extension hashicorp.terraform && \
+  code-server --install-extension hashicorp.hcl && \
+  code-server --install-extension hashicorp.hcl && \
   code-server --install-extension golang.go
 
 # Install Go tools

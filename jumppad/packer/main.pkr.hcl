@@ -11,6 +11,10 @@ variable "project_id" {
   type = string
 }
 
+variable "version" {
+  type = string
+}
+
 variable "region" {
   type    = string
   default = "europe-west1"
@@ -36,7 +40,7 @@ source "googlecompute" "jumppad" {
   zone       = var.zone
 
   image_family = "jumppad"
-  image_name   = regex_replace("terraform-provider-${var.jumppad_version}", "[^a-zA-Z0-9_-]", "-")
+  image_name   = regex_replace("terraform-provider-workshop-${var.jumppad_version}-${var.version}", "[^a-zA-Z0-9_-]", "-")
 
   source_image_family = "ubuntu-2204-lts"
   machine_type        = "n1-standard-4"

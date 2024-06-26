@@ -21,11 +21,11 @@ you will understand:
 This environment provides all the software you need to complete 
 this workshop. Before continuing, let's explore this.
 
-### API Documentation
+## API Documentation
 
 The API for the Minecraft server is running at:
 
-[{{ api_url }}]({{ api_url }})
+<Link href="{{ api_url }}" target="_blank"/>
 
 You will use this when interacting with your Terraform provider through the
 provided go client SDK.
@@ -33,24 +33,23 @@ provided go client SDK.
 Documentation for this API can be seen by viewing the `ReDoc` documentation at
 the following location:
 
-[{{ api_url }}/redoc]({{ api_url }}/redoc)
+<Link href="{{ api_url }}/redoc" target="redoc" name="redoc"/>
 
-
-### Minecraft
+## Minecraft
 
 There is also a Minecraft server unique to your environment; there 
 is no need to worry about doing something that impacts the other participants.
 You can connect to the server in one of two ways: using the built-in 
 browser-based viewer or your own Minecraft client.
 
-#### Connecting to the Server - Minecraft Client
+### Connecting to the Server - Minecraft Client
 To connect using your own Minecraft client, you can use the following settings
 when adding a new server in the multiplayer options. 
 
-```
-Server: {{ minecraft_url }}
-Port: 25565
-```
+|         |                     |
+|---------|---------------------|
+| Server  | {{ minecraft_url }} |
+| Port    | 25565               |
 
 ![](/assets/getting_started/minecraft_client_1.jpg)
 
@@ -61,12 +60,12 @@ The city you will be terraforming should look familiar to you.
 **Note**
 Only the Java version of Minecraft will work.
 
-#### Connecting to the Server - Minecraft Browser
+### Connecting to the Server - Minecraft Browser
 
 You can use the browser-based client if you do not have a Minecraft client. 
 To access this, open the following URL in your browser:
 
-[{{ prismarine_url }}]({{ prismarine_url }})
+<Link href="{{prismarine_url }}" target="_blank"/>
 
 Once loaded click the play button and enter the following details to connect:
 

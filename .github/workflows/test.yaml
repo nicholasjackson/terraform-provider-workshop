@@ -1,0 +1,20 @@
+---
+name: Build And Deploy
+on:
+  push:
+    branches:
+      - "**"
+jobs:
+  functional_test:
+    name: Test Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Jumppad
+        run: |
+          curl https://jumppad.dev/install | bash 
+
+      - name: Run Tests
+        run: |
+          jumppad test ./jumppad

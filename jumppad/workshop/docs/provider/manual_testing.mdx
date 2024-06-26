@@ -44,16 +44,16 @@ terraform {
 }
 
 provider "minecraft" {
-  endpoint = "http://minecraft.container.jumppad.dev:9090"
+  endpoint = "{{api_url}}"
   api_key = "supertopsecret"
 }
 
 resource "minecraft_schema" "car" {
-  x = -1278
+  x = -1275
   y = 24
-  z = 288
+  z = 138
   rotation = 270
-  schema = "../../../schemas/car.zip"
+  schema = "../../schemas/car.zip"
 }
 ```
 
@@ -119,9 +119,9 @@ Terraform will perform the following actions:
       + id       = (known after apply)
       + rotation = 270
       + schema   = "../../../schemas/car.zip"
-      + x        = -1278
+      + x        = -1275
       + y        = 24
-      + z        = 288
+      + z        = 138
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -159,9 +159,9 @@ Terraform will perform the following actions:
       + rotation    = 270
       + schema      = "../../../schemas/car.zip"
       + schema_hash = (known after apply)
-      + x           = -1278
+      + x           = -1275
       + y           = 24
-      + z           = 288
+      + z           = 138
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -211,9 +211,9 @@ Terraform will perform the following actions:
       - rotation    = 270 -> null
       - schema      = "../../../schemas/car.zip" -> null
       - schema_hash = "GlcbIxS+tBGsVVkdctmHkozo40ER0oJfkzkvOxBLvGA=" -> null
-      - x           = -1278 -> null
+      - x           = -1275 -> null
       - y           = 24 -> null
-      - z           = 288 -> null
+      - z           = 138 -> null
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.

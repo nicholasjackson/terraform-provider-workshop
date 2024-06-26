@@ -3,7 +3,7 @@ package provider
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccBlockDataSource(t *testing.T) {
@@ -23,10 +23,6 @@ func TestAccBlockDataSource(t *testing.T) {
 }
 
 const testAccExampleDataSourceConfig = `
-provider "minecraft" {
-  endpoint = "http://minecraft.container.shipyard.run:9090"
-  api_key = "supertopsecret"
-}
 data "minecraft_block" "example" {
   x = -1272
   y = 23

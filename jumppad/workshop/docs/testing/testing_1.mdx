@@ -97,15 +97,15 @@ reusable across multiple tests.
 
 ```go
 func testAccSchemaResourceConfig(x, y, z int) string {
-  return fmt.Sprintf(`
-resource "minecraft_schema" "car" {
-    x = %d
-    y = %d
-    z = %d
-    rotation = 270
-    schema = "../../../schemas/car.zip"
-  }
-`, x, y, z)
+	return fmt.Sprintf(`
+  resource "minecraft_schema" "car" {
+	  x = %d
+	  y = %d
+	  z = %d
+	  rotation = 270
+	  schema = "../../../schemas/car.zip"
+	}
+  `, x, y, z)
 }
 ```
 
@@ -203,7 +203,7 @@ the following command in the terminal.
 
 ```shell
 TF_ACC=1 \
-MINECRAFT_ENDPOINT=http://minecraft.container.jumppad.dev:9090 \
+MINECRAFT_ENDPOINT={{api_url}} \
 MINECRAFT_APIKEY=supertopsecret \
 go test -run TestAccSchemaResource github.com/hashicorp/terraform-provider-scaffolding-framework/internal/provider
 ```

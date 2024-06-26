@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -5,18 +8,18 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Ensure ScaffoldingProvider satisfies various provider interfaces.
+// Ensure MinecraftProvider satisfies various provider interfaces.
 var _ provider.Provider = &MinecraftProvider{}
-var _ provider.ProviderWithMetadata = &MinecraftProvider{}
+var _ provider.ProviderWithFunctions = &MinecraftProvider{}
 
-// ScaffoldingProvider defines the provider implementation.
+// MinecraftProvider defines the provider implementation.
 type MinecraftProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
@@ -24,7 +27,7 @@ type MinecraftProvider struct {
 	version string
 }
 
-// ScaffoldingProviderModel describes the provider data model.
+// MinecraftProviderModel describes the provider data model.
 type MinecraftProviderModel struct {
 	Endpoint types.String `tfsdk:"endpoint"`
 	APIKey   types.String `tfsdk:"api_key"`
@@ -35,21 +38,19 @@ func (p *MinecraftProvider) Metadata(ctx context.Context, req provider.MetadataR
 	resp.Version = p.version
 }
 
-func (p *MinecraftProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"endpoint": {
+func (p *MinecraftProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"endpoint": schema.StringAttribute{
 				MarkdownDescription: "Example provider attribute",
 				Optional:            true,
-				Type:                types.StringType,
 			},
-			"api_key": {
+			"api_key": schema.StringAttribute{
 				MarkdownDescription: "Example provider attribute",
 				Optional:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (p *MinecraftProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -82,7 +83,6 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 		apiKey = apk
 	}
 
-	// if config is not set, return an error
 	if endpoint == "" {
 		resp.Diagnostics.AddError(
 			"Configuration Error",
@@ -91,7 +91,7 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	if apiKey == "" && data.APIKey.IsNull() {
+	if apiKey == "" {
 		resp.Diagnostics.AddError(
 			"Configuration Error",
 			"unable to set endpoint, please set either the endpoint property in the provider or the environment variable 'MINECRAFT_APIKEY'",
@@ -108,13 +108,18 @@ func (p *MinecraftProvider) Configure(ctx context.Context, req provider.Configur
 func (p *MinecraftProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewSchemaResource,
-		NewBlockResource,
 	}
 }
 
 func (p *MinecraftProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewBlockDataSource,
+	}
+}
+
+func (p *MinecraftProvider) Functions(ctx context.Context) []func() function.Function {
+	return []func() function.Function{
+		NewExampleFunction,
 	}
 }
 

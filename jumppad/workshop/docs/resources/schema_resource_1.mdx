@@ -44,7 +44,7 @@ You are going to build a resource that interacts with the schema capabilities
 of the Minecraft API that allows you to place a pre-defined structure at the
 given location.
 
-[{{api_url}}:9090/redoc#tag/Schema]({{api_url}}:9090/redoc#tag/Schema)
+<Link href="{{api_url}}/redoc#tag/Schema" target="redoc" name="Schema"/>
 
 ## Creating a Schema using the API
 
@@ -57,6 +57,9 @@ horizontal coordinates and `y` is a vertical coordinate.
 You can determine your position at any time by pressng `F3`, this will show the
 minecraft diagnostics.
 
+You can also use the chat command `position` by pressing the `/` key and then typing
+`position`.
+
 ![](/assets/schema/position.jpg)
 
 Let's create a car at your current location. The schema for a car is located 
@@ -64,7 +67,7 @@ in the ./schema/car.zip file. Using `curl` you are simulating what Terraform
 will do when a `terraform apply` runs containing one of your custom resources.
 
 ```shell
-curl -H 'X-API-Key: supertopsecret' http://minecraft.container.jumppad.dev:9090/v1/schema/-1260/24/288/0 --data-binary @./schemas/car.zip
+curl -H 'X-API-Key: supertopsecret' {{api_url}}/v1/schema/-1268/24/134/0 --data-binary @./schemas/car.zip
 ```
 
 After executing the API request will return an ID of the schema that can be used 
@@ -86,11 +89,11 @@ Enter the following details in your terminal, replacing the `[id]` with the
 id returned from the previous request.
 
 ```shell
-curl -H 'X-API-Key: supertopsecret' http://minecraft.container.jumppad.dev:9090/v1/schema/details/[id]
+curl -H 'X-API-Key: supertopsecret' {{api_url}}/v1/schema/details/[id]
 ```
 
 ```json
-{"startX":-1260,"startY":24,"startZ":288,"endX":-1252,"endY":34,"endZ":292}
+{"startX":-1268,"startY":24,"startZ":134,"endX":-1260,"endY":34,"endZ":138}
 ```
 
 ## Removing a Schema
@@ -103,7 +106,7 @@ Execute the following command in your terminal, replacing the `[id]` with the
 id returned from the previous request.
 
 ```shell
-curl -H 'X-API-Key: supertopsecret' -XDELETE http://minecraft.container.jumppad.dev:9090/v1/schema/undo/[id]
+curl -H 'X-API-Key: supertopsecret' -XDELETE {{api_url}}/v1/schema/undo/[id]
 ```
 
 The car you created earlier will now have been removed.
@@ -157,7 +160,7 @@ provider.
 
 ```javascript
 provider "minecraft" {
-  endpoint = "http://minecraft.container.jumppad.dev:9090"
+  endpoint = "{{api_url}}"
   api_key = "supertopsecret"
 }
 ```
@@ -174,6 +177,36 @@ resource "minecraft_schema" "car" {
   schema = "../../../schemas/car.zip"
 }
 ```
+
+Your final file should look like the following example:
+
+<Solution title="examples/minecraft_schema/resource.tf">
+
+```hcl
+terraform {
+  required_providers {
+    minecraft = {
+      source  = "local/hashicraft/minecraft"
+      version = "0.1.0"
+    }
+  }
+}
+
+provider "minecraft" {
+  endpoint = "{{api_url}}"
+  api_key = "supertopsecret"
+}
+
+resource "minecraft_schema" "car" {
+  x = -1278
+  y = 24
+  z = 288
+  rotation = 270
+  schema = "../../../schemas/car.zip"
+}
+```
+
+</Solution>
 
 We will use these when testing our provider, but you first need to write the 
 code. Let's do that now.
@@ -258,9 +291,9 @@ the `resource.RequiresReplace` function.
 ## Exercise
 Why not have a go at defining the schema for the HCL resouce that you just created?
 
-Did you manage to complete that?
+Did you manage to complete that? If you need some help the solution is listed below.
 
-The Schema should look like the following example.
+<Solution title="Solution">
 
 ```go
 func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -316,6 +349,8 @@ func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest,
 }
 ```
 
+</Solution>
+
 ## Configuring the API Client
 
 To interact with the API, you need to know the endpoint and the APIKey. Ideally, 
@@ -329,8 +364,16 @@ configured when we look at the `Provider` type.
 
 For now, let's modify the client injection code in `Configure` method to use the 
 `minecraftClient`. Rename `client` to `minecraftClient` and change the type to 
-`*client`, which is  the go client for the API from this package. You can then 
-update the configure block to look like the following example.
+`*client`, which is  the go client for the API from this package. 
+
+```go
+type SchemaResource struct {
+	minecraftClient *client
+}
+```
+
+
+You can then update the configure block to look like the following example:
 
 ```go
 func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -486,6 +529,239 @@ resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 This code is saves your `SchemaResourceModel` to the Terraform state,
 it is essential that you save your model with the unique id, or Terraform
 will not know how to delete or update it.
+
+Your current schema_resource.go should look like the following example:
+
+<Solution title="internal/provider/schema_resource.go">
+
+```go
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package provider
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+// Ensure provider defined types fully satisfy framework interfaces.
+var _ resource.Resource = &SchemaResource{}
+var _ resource.ResourceWithImportState = &SchemaResource{}
+
+func NewSchemaResource() resource.Resource {
+	return &SchemaResource{}
+}
+
+// SchemaResource defines the resource implementation.
+type SchemaResource struct {
+	minecraftClient *client
+}
+
+// SchemaResourceModel describes the resource data model.
+type SchemaResourceModel struct {
+	X          types.Number `tfsdk:"x"`
+	Y          types.Number `tfsdk:"y"`
+	Z          types.Number `tfsdk:"z"`
+	Rotation   types.Number `tfsdk:"rotation"`
+	Schema     types.String `tfsdk:"schema"`
+	SchemaHash types.String `tfsdk:"schema_hash"`
+	Id         types.String `tfsdk:"id"`
+}
+
+func (r *SchemaResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_schema"
+}
+
+func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		// This description is used by the documentation generator and the language server.
+		MarkdownDescription: "Example resource",
+
+		Attributes: map[string]schema.Attribute{
+			"x": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"y": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"z": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"rotation": schema.NumberAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
+				},
+			},
+			"schema": schema.StringAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "Example identifier",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+		},
+	}
+}
+
+func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.minecraftClient = client
+}
+
+func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data SchemaResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	x, _ := data.X.ValueBigFloat().Int64()
+	y, _ := data.Y.ValueBigFloat().Int64()
+	z, _ := data.Z.ValueBigFloat().Int64()
+	rotation, _ := data.Rotation.ValueBigFloat().Int64()
+
+	sr := schemaRequest{
+		X:        int(x),
+		Y:        int(y),
+		Z:        int(z),
+		Rotation: int(rotation),
+		Schema:   data.Schema.ValueString(),
+	}
+
+	id, err := r.minecraftClient.createSchema(sr)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create example, got error: %s", err))
+		return
+	}
+
+	data.Id = types.StringValue(id)
+
+	// Write logs using the tflog package
+	// Documentation: https://terraform.io/plugin/log
+	tflog.Trace(ctx, "created a resource")
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *SchemaResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data SchemaResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If applicable, this is a great opportunity to initialize any necessary
+	// provider client data and make a call using it.
+	// httpResp, err := r.client.Do(httpReq)
+	// if err != nil {
+	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
+	//     return
+	// }
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *SchemaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data SchemaResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If applicable, this is a great opportunity to initialize any necessary
+	// provider client data and make a call using it.
+	// httpResp, err := r.client.Do(httpReq)
+	// if err != nil {
+	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update example, got error: %s", err))
+	//     return
+	// }
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *SchemaResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data SchemaResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If applicable, this is a great opportunity to initialize any necessary
+	// provider client data and make a call using it.
+	// httpResp, err := r.client.Do(httpReq)
+	// if err != nil {
+	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete example, got error: %s", err))
+	//     return
+	// }
+}
+
+func (r *SchemaResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+```
+
+</Solution>
 
 So far you have most of the code to create a resource, but there is one 
 more thing you need to do. While terraform can detect the changes in the HCL text

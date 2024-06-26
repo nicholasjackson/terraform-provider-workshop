@@ -1,5 +1,5 @@
 resource "network" "main" {
-  subnet = "10.0.0.0/16"
+  subnet = "10.100.0.0/16"
 }
 
 variable "docs_url" {
@@ -9,17 +9,17 @@ variable "docs_url" {
 
 variable "prismarine_url" {
   description = "The URL for prismarine"
-  default     = "http://localhost:8080"
+  default     = "http://minecraft-web.container.local.jmpd.in:8080"
 }
 
 variable "minecraft_url" {
   description = "The URL for the Minecraft server"
-  default     = "minecraft.container.jumppad.dev"
+  default     = "minecraft.container.local.jmpd.in"
 }
 
 variable "api_url" {
   description = "The URL for the Minecraft API"
-  default     = "http://localhost:9090"
+  default     = "http://minecraft.container.local.jmpd.in:9090"
 }
 
 variable "vscode_token" {
@@ -66,13 +66,21 @@ resource "template" "vscode_settings" {
   destination = "${data("vscode")}/settings.json"
 }
 
+resource "template" "bash_rc" {
+  source = <<-EOF
+  export PATH=$PATH:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  EOF
+
+  destination = "${data("bash")}/.bashrc"
+}
+
 resource "container" "vscode" {
   network {
     id = resource.network.main.meta.id
   }
 
   image {
-    name = "nicholasjackson/terraform-provider-workshop:v0.2.0"
+    name = "nicholasjackson/terraform-provider-workshop:v0.3.1"
   }
 
   volume {
@@ -88,6 +96,11 @@ resource "container" "vscode" {
   volume {
     source      = resource.template.vscode_settings.destination
     destination = "/provider/.vscode/settings.json"
+  }
+
+  volume {
+    source      = resource.template.bash_rc.destination
+    destination = "/root/.bashrc"
   }
 
   environment = {
@@ -125,13 +138,17 @@ module "workshop" {
     docs_url          = variable.docs_url
     minecraft_url     = variable.minecraft_url
     prismarine_url    = variable.prismarine_url
-    redoc_url         = variable.redoc_url
+    api_url           = variable.api_url
   }
 }
 
 resource "docs" "docs" {
   network {
     id = resource.network.main.meta.id
+  }
+
+  image {
+    name = "ghcr.io/jumppad-labs/docs:v0.5.1"
   }
 
   /* 
