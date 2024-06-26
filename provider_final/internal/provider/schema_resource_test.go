@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccSchemaResource(t *testing.T) {
@@ -14,29 +14,25 @@ func TestAccSchemaResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccSchemaResourceConfig("car"),
+				Config: testAccSchemaResourceConfig(1, 2, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("minecraft_schema.car", "x", "-1278"),
-					resource.TestCheckResourceAttr("minecraft_schema.car", "y", "24"),
+					resource.TestCheckResourceAttr("minecraft_schema.car", "x", "1"),
+					resource.TestCheckResourceAttr("minecraft_schema.car", "y", "2"),
+					resource.TestCheckResourceAttr("minecraft_schema.car", "z", "3"),
 				),
 			},
-			// Delete testing automatically occurs in TestCase
 		},
 	})
 }
 
-func testAccSchemaResourceConfig(configurableAttribute string) string {
+func testAccSchemaResourceConfig(x, y, z int) string {
 	return fmt.Sprintf(`
-provider "minecraft" {
-  endpoint = "http://minecraft.container.shipyard.run:9090"
-  api_key = "supertopsecret"
-}
-resource "minecraft_schema" "%s" {
-  x = -1278
-  y = 24
-  z = 288
-  rotation = 270
-  schema = "../../schemas/car.zip"
-}
-`, configurableAttribute)
+  resource "minecraft_schema" "car" {
+	  x = %d
+	  y = %d
+	  z = %d
+	  rotation = 270
+	  schema = "../../schemas/car.zip"
+	}
+  `, x, y, z)
 }

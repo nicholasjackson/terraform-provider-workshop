@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -5,25 +8,24 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Ensure provider defined types fully satisfy framework interfaces
+// Ensure provider defined types fully satisfy framework interfaces.
 var _ datasource.DataSource = &BlockDataSource{}
 
 func NewBlockDataSource() datasource.DataSource {
 	return &BlockDataSource{}
 }
 
-// ExampleDataSource defines the data source implementation.
+// BlockDataSource defines the data source implementation.
 type BlockDataSource struct {
 	minecraftClient *client
 }
 
-// ExampleDataSourceModel describes the data source data model.
+// BlockDataSourceModel describes the data source data model.
 type BlockDataSourceModel struct {
 	X        types.Number `tfsdk:"x"`
 	Y        types.Number `tfsdk:"y"`
@@ -36,39 +38,34 @@ func (d *BlockDataSource) Metadata(ctx context.Context, req datasource.MetadataR
 	resp.TypeName = req.ProviderTypeName + "_block"
 }
 
-func (d *BlockDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (d *BlockDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Block data source",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"x": {
-				MarkdownDescription: "Example configurable attribute",
+		Attributes: map[string]schema.Attribute{
+			"x": schema.NumberAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
 			},
-			"y": {
-				MarkdownDescription: "Example configurable attribute",
+			"y": schema.NumberAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
 			},
-			"z": {
-				MarkdownDescription: "Example configurable attribute",
+			"z": schema.NumberAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
 			},
-			"material": {
-				MarkdownDescription: "Example identifier",
-				Type:                types.StringType,
+			"material": schema.StringAttribute{
+				MarkdownDescription: "Block configurable attribute",
 				Computed:            true,
 			},
-			"id": {
-				MarkdownDescription: "Example identifier",
-				Type:                types.StringType,
+			"id": schema.StringAttribute{
+				MarkdownDescription: "Block identifier",
 				Computed:            true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *BlockDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -111,7 +108,6 @@ func (d *BlockDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			"Unable to retrieve block",
 			fmt.Sprintf("Unable to get block, got error: %s", err),
 		)
-
 		return
 	}
 
@@ -121,6 +117,7 @@ func (d *BlockDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "read a data source")
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

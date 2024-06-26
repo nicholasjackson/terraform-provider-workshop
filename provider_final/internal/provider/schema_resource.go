@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -8,15 +11,17 @@ import (
 	"io"
 	"os"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Ensure provider defined types fully satisfy framework interfaces
+// Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SchemaResource{}
 var _ resource.ResourceWithImportState = &SchemaResource{}
 
@@ -24,12 +29,12 @@ func NewSchemaResource() resource.Resource {
 	return &SchemaResource{}
 }
 
-// ExampleResource defines the resource implementation.
+// SchemaResource defines the resource implementation.
 type SchemaResource struct {
 	minecraftClient *client
 }
 
-// ExampleResourceModel describes the resource data model.
+// SchemaResourceModel describes the resource data model.
 type SchemaResourceModel struct {
 	X          types.Number `tfsdk:"x"`
 	Y          types.Number `tfsdk:"y"`
@@ -40,86 +45,68 @@ type SchemaResourceModel struct {
 	Id         types.String `tfsdk:"id"`
 }
 
-type SchemaResourceModel2 struct {
-	X          int    `tfsdk:"x"`
-	Y          int    `tfsdk:"y"`
-	Z          int    `tfsdk:"z"`
-	Rotation   int    `tfsdk:"rotation"`
-	Schema     string `tfsdk:"schema"`
-	SchemaHash string `tfsdk:"schema_hash"`
-	Id         string `tfsdk:"id"`
-}
-
 func (r *SchemaResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_schema"
 }
 
-func (r *SchemaResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Schema resource",
+		MarkdownDescription: "Example resource",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"x": {
+		Attributes: map[string]schema.Attribute{
+			"x": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"y": {
+			"y": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"z": {
+			"z": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"rotation": {
-				MarkdownDescription: "Example configurable attribute",
-				Required:            false,
-				Optional:            true,
-				Type:                types.NumberType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
-				},
-			},
-			"schema": {
+			"rotation": schema.NumberAttribute{
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
-				Type:                types.StringType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.Number{
+					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"schema_hash": {
+			"schema": schema.StringAttribute{
+				MarkdownDescription: "Example configurable attribute",
+				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"schema_hash": schema.StringAttribute{
+				MarkdownDescription: "Example configurable attribute",
 				Computed:            true,
-				MarkdownDescription: "Example configurable attribute",
-				Type:                types.StringType,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
+				PlanModifiers: []planmodifier.String{
 					&schemaPlanModifier{},
-					resource.RequiresReplace(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": {
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Example identifier",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				Type: types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -143,7 +130,7 @@ func (r *SchemaResource) Configure(ctx context.Context, req resource.ConfigureRe
 }
 
 func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *SchemaResourceModel
+	var data SchemaResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -171,10 +158,13 @@ func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	strHash, _ := calculateHashFromFile(data.Schema.ValueString())
-
-	data.SchemaHash = types.StringValue(strHash)
 	data.Id = types.StringValue(id)
+
+	hash, err := calculateHashFromFile(data.Schema.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to generate hash for file", err.Error())
+	}
+	data.SchemaHash = types.StringValue(hash)
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -185,7 +175,9 @@ func (r *SchemaResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *SchemaResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *SchemaResourceModel
+	var data SchemaResourceModel
+
+	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
@@ -201,13 +193,27 @@ func (r *SchemaResource) Read(ctx context.Context, req resource.ReadRequest, res
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read schema, got error: %s", err))
 		return
 	}
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SchemaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data SchemaResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SchemaResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data *SchemaResourceModel
+	var data SchemaResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -231,13 +237,13 @@ func calculateHashFromFile(path string) (string, error) {
 	// generate a hash of the file so that we can track changes
 	f, err := os.Open(path)
 	if err != nil {
-		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
+		return "", fmt.Errorf("unable to generate hash for schema file: %s", err)
 	}
 	defer f.Close()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
-		return "", fmt.Errorf("Unable to generate hash for schema file: %s", err)
+		return "", fmt.Errorf("unable to generate hash for schema file: %s", err)
 	}
 
 	return base64.StdEncoding.EncodeToString(h.Sum(nil)), nil
@@ -245,15 +251,15 @@ func calculateHashFromFile(path string) (string, error) {
 
 type schemaPlanModifier struct{}
 
-func (s *schemaPlanModifier) Description(ctx context.Context) string {
+func (s schemaPlanModifier) Description(ctx context.Context) string {
 	return "checks if the file represented by schema has changed"
 }
 
-func (s *schemaPlanModifier) MarkdownDescription(ctx context.Context) string {
+func (s schemaPlanModifier) MarkdownDescription(ctx context.Context) string {
 	return s.Description(ctx)
 }
 
-func (s *schemaPlanModifier) Modify(ctx context.Context, req tfsdk.ModifyAttributePlanRequest, resp *tfsdk.ModifyAttributePlanResponse) {
+func (s schemaPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
 	// generate a hash from the file
 	attrPath := path.Empty().AtName("schema")
 	schema := ""
@@ -272,7 +278,7 @@ func (s *schemaPlanModifier) Modify(ctx context.Context, req tfsdk.ModifyAttribu
 	newHash, _ := calculateHashFromFile(schema)
 	if newHash != schemaHash {
 		// set the new value and set the requires replace, Terraform will force the resource to be re-created
-		resp.AttributePlan = types.StringValue(newHash)
+		resp.PlanValue = types.StringValue(newHash)
 		resp.RequiresReplace = true
 		resp.Diagnostics.AddWarning(
 			"Schema File Changed",
