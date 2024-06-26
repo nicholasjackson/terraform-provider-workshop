@@ -1,0 +1,35 @@
+---
+name: Build And Deploy
+on:
+  push:
+    branches:
+      - "**"
+jobs:
+  dagger_build:
+    name: Dagger Build and Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+  
+  functional_test:
+    name: Test Docker
+    runs-on: ubuntu-latest
+    needs: dagger_build
+
+    - name: Docker
+        uses: dagger/dagger-for-github@v5
+        with:
+          verb: call
+          module: ./dagger
+          args: functional-test --src=. --working-directory=jumppad --runtime=docker
+          version: "0.11.5"
+          dagger-flags: "--progress=plain"
+
+    - name: Podman
+        uses: dagger/dagger-for-github@v5
+        with:
+          verb: call
+          module: ./dagger
+          args: functional-test --src=. --working-directory=jumppad --runtime=podman
+          version: "0.11.5"
+          dagger-flags: "--progress=plain"

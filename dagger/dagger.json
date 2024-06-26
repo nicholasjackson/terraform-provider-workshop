@@ -1,0 +1,12 @@
+{
+  "name": "dagger-ci",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "jumppad",
+      "source": "github.com/jumppad-labs/daggerverse/jumppad@ba68da26819c10be04a1be421820cf21d9b7cc30"
+    }
+  ],
+  "source": ".",
+  "engineVersion": "v0.11.0"
+}
