@@ -11,20 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Docker
-        uses: dagger/dagger-for-github@v5
-        with:
-          verb: call
-          module: ./dagger
-          args: functional-test --src=. --working-directory=jumppad --runtime=docker
-          version: "0.11.5"
-          dagger-flags: "--progress=plain"
+      - name: Install Jumppad
+        run: |
+          curl https://jumppad.dev/install | bash 
 
-      - name: Podman
-        uses: dagger/dagger-for-github@v5
-        with:
-          verb: call
-          module: ./dagger
-          args: functional-test --src=. --working-directory=jumppad --runtime=podman
-          version: "0.11.5"
-          dagger-flags: "--progress=plain"
+      - name: Run Tests
+        run: |
+          jumppad test ./jumppad

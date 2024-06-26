@@ -8,8 +8,13 @@ build_codeserver:
 	docker buildx inspect --bootstrap
 	docker buildx build --platform linux/arm64,linux/amd64 \
 		-t ${REPO}:${VERSION} \
-	  -f ./dockerfiles/codeserver/Dockerfile \
+	  -f ./jumppad/dockerfiles/codeserver/Dockerfile \
 		--no-cache \
-	  . \
+	  ./jumppad \
 		--push
 	
+functional_test:
+	dagger -m ./dagger call functional-test --src . --working-directory jumppad --runtime docker
+
+build_packer:
+	cd ./jumppad/packer && packer build -var-file=./main.pkrvars.hcl ./main.pkr.hcl
