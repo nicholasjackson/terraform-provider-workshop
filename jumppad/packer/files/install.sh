@@ -43,4 +43,14 @@ systemctl enable jumppad-connector.service
 # Pre-pull docker images
 for IMAGE in $JUMPPAD_IMAGES; do
   docker pull $IMAGE
-done  
+done
+
+# Start Jumppad and then teardown
+
+git clone https://github.com/nicholasjackson/terraform-provider-workshop.git /workshop
+
+cd /workshop
+
+jumppad up --non-interactive ./jumppad
+
+jumppad down --non-interactive

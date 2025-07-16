@@ -8,5 +8,5 @@ jumppad_images = [
 
 jumppad_version = "0.21.0"
 
-version    = "3"
+version    = "4"
 project_id = "jumppad"
