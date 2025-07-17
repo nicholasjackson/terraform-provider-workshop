@@ -122,9 +122,9 @@ been correctly set.
 {
   Config: testAccSchemaResourceConfig(1,2,3),
   Check: resource.ComposeAggregateTestCheckFunc(
-    resource.TestCheckResourceAttr("minecraft_schema.car", "x", 1),
-    resource.TestCheckResourceAttr("minecraft_schema.car", "y", 2),
-    resource.TestCheckResourceAttr("minecraft_schema.car", "z", 3),
+    resource.TestCheckResourceAttr("minecraft_schema.car", "x", "1"),
+    resource.TestCheckResourceAttr("minecraft_schema.car", "y", "2"),
+    resource.TestCheckResourceAttr("minecraft_schema.car", "z", "3"),
   ),
 },
 ```

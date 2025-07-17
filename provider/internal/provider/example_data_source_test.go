@@ -3,7 +3,10 @@ package provider
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func TestAccExampleDataSource(t *testing.T) {
@@ -14,9 +17,13 @@ func TestAccExampleDataSource(t *testing.T) {
 			// Read testing
 			{
 				Config: testAccExampleDataSourceConfig,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.scaffolding_example.test", "id", "example-id"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"data.scaffolding_example.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact("example-id"),
+					),
+				},
 			},
 		},
 	})

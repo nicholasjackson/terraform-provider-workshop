@@ -120,6 +120,24 @@ func (d *BlockDataSource) Configure(ctx context.Context, req datasource.Configur
 }
 ```
 
+Next let's implement the `Metadata` method. This is used so terraform knows which data source to use when
+you define one in your configuration.
+
+## Implementing the Metadata Method
+
+With the resource we set the metadata to `req.ProviderTypeName + "_schema"`, this would mean that
+resouces in the config `resource "minecraft_schema" "example" { ... }` will use the `SchemaResource`.
+
+For the data source we will use `req.ProviderTypeName + "_block"` so that the configuration will look like
+`data "minecraft_block" "example" { ... }`. Update the `Metadata` method in the `block_data_source.go` file
+so that it looks like the following example:
+
+```go
+func (r *SchemaResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_block"
+}
+```
+
 Once all that is done, we need to change the reference in `provider.go` and
 then we can compile the provider to check everything is ok.
 

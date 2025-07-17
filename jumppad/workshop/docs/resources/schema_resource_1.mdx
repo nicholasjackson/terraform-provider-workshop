@@ -44,7 +44,7 @@ You are going to build a resource that interacts with the schema capabilities
 of the Minecraft API that allows you to place a pre-defined structure at the
 given location.
 
-<Link href="{{api_url}}/redoc#tag/Schema" target="redoc" name="Schema"/>
+<Link href="{{api_url}}/redoc#tag/Schema" target="_blank"/>
 
 ## Creating a Schema using the API
 
@@ -277,14 +277,13 @@ change need to force a replacement. This is set by using the `PlanModifiers` and
 the `resource.RequiresReplace` function.
 
 ```go
-"x": {
-    MarkdownDescription: "Example configurable attribute",
-    Required:            true,
-    Type:                types.NumberType,
-    PlanModifiers: []tfsdk.AttributePlanModifier{
-      resource.RequiresReplace(),
-    },
-  },
+"x": schema.NumberAttribute {
+	MarkdownDescription: "Example configurable attribute",
+	Required:            true,
+	PlanModifiers: []planmodifier.Number{
+		numberplanmodifier.RequiresReplace(),
+	},
+},
 ```
 
 
@@ -302,42 +301,42 @@ func (r *SchemaResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		MarkdownDescription: "Example resource",
 
 		Attributes: map[string]schema.Attribute{
-			"x": schema.NumberAttribute{
+			"x": schema.NumberAttribute {
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
 				PlanModifiers: []planmodifier.Number{
 					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"y": schema.NumberAttribute{
+			"y": schema.NumberAttribute {
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
 				PlanModifiers: []planmodifier.Number{
 					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"z": schema.NumberAttribute{
+			"z": schema.NumberAttribute {
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
 				PlanModifiers: []planmodifier.Number{
 					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"rotation": schema.NumberAttribute{
+			"rotation": schema.NumberAttribute {
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
 				PlanModifiers: []planmodifier.Number{
 					numberplanmodifier.RequiresReplace(),
 				},
 			},
-			"schema": schema.StringAttribute{
+			"schema": schema.StringAttribute {
 				MarkdownDescription: "Example configurable attribute",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": schema.StringAttribute{
+			"id": schema.StringAttribute {
 				Computed:            true,
 				MarkdownDescription: "Example identifier",
 				PlanModifiers: []planmodifier.String{
